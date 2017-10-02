@@ -1,0 +1,76 @@
+{
+  "name": "epbdjs-cli",
+  "version": "0.0.1",
+  "description": "CLI for the epbdjs package (energy performance of buildings calculations)",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rimraf lib/* && babel ./src --out-dir ./lib && npm run copy",
+    "copy": "ncp ./src/examples ./lib && ncp README.md lib/README.md && ncp LICENSE lib/LICENSE && ncp TODO lib/TODO",
+    "prepare": "npm run build",
+    "test": "echo \"Testing epbdjs-cli\" && node src/test.js",
+    "test:watch": "npm run test -- -w",
+    "clean": "rimraf lib/*",
+    "lint": "eslint --ignore-pattern 'lib/*.js' --ext .mjs,.js,.jsx src/",
+    "flow": "flow"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pachi/epbdjs-cli.git"
+  },
+  "keywords": [
+    "energy",
+    "buildings",
+    "NZEB",
+    "EPBD",
+    "52000-1",
+    "energy",
+    "performance",
+    "CTE",
+    "DB-HE"
+  ],
+  "author": "Rafael Villar Burke <pachi@ietcc.csic.es>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pachi/epbdjs-cli/issues"
+  },
+  "homepage": "https://github.com/pachi/epbdjs-cli#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-eslint": "^7.2.3",
+    "babel-plugin-transform-export-extensions": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-flow": "^6.23.0",
+    "eslint": "^4.6.1",
+    "eslint-plugin-babel": "^4.1.2",
+    "eslint-plugin-flowtype": "^2.35.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-sorting": "^0.3.0",
+    "ncp": "^2.0.0",
+    "rimraf": "^2.6.2",
+    "watch": "^1.0.2"
+  },
+  "dependencies": {
+    "argparse": "^1.0.9",
+    "epbdjs": "^4.1.0"
+  },
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "node": "current"
+          },
+          "useBuiltIns": true
+        }
+      ],
+      "flow"
+    ],
+    "plugins": [
+      "transform-export-extensions",
+      "transform-object-rest-spread"
+    ]
+  }
+}

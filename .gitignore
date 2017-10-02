@@ -1,0 +1,8 @@
+node_modules
+lib
+dist
+public
+stats.json
+*.log
+*.generated.*
+npm-debug.log
