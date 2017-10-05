@@ -9,7 +9,8 @@ TESTCARRIERS:=src/examples/cte_test_carriers.csv
 
 test: ${BUILDDIR}/${OUTSCRIPT} ${BUILDDIR}/examples
 	node ${BUILDDIR}/${OUTSCRIPT} --help
-	node ${BUILDDIR}/${OUTSCRIPT} -vvv -c ${TESTCARRIERS} -f ${TESTFP} --arearef 200 --json balance.json
+	node ${BUILDDIR}/${OUTSCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} --arearef 200 --json balance.json
+	node lib/cteepbd.js -c src/examples/cte_test_carriers.csv -l PENINSULA --cogen 0 2.5 0 2.5 -vv
 
 installpackages:
 	$(info [INFO]: instalación de paquetes)
@@ -21,6 +22,7 @@ nodebin: ${WINBUILDDIR} ${BUILDDIR}/${OUTSCRIPT}
 	wget -cN http://nodejs.org/dist/${NODEBINDIR}/${NODEBIN}
 	unzip -jo ${NODEBIN} '*/node.exe' -d ${WINBUILDDIR}
 
+# TODO: poner todo en un solo archivo con webpack --target:node
 distwin32: nodebin ${BUILDDIR}/${OUTSCRIPT}
 	cp ${BUILDDIR}/${OUTSCRIPT} ${WINBUILDDIR}
 
