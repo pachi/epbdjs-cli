@@ -56,9 +56,9 @@ const AREA_REF = 1.0;
 
 var parser = new ArgumentParser({
   addHelp:true,
-  //prog: 'epbjscli',
-  description: 'Interfaz de línea de comandos de epbdjs [v.1.0.0]',
-  epilog: "Copyright (c) 2017 Ministerio de Fomento, Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC). Publicado bajo licencia MIT."
+  prog: 'cteepbd',
+  description: 'cteepbd [v.1.0.0] - Cálculo de la eficiencia energética de los edificios (CTE DB-HE)',
+  epilog: "Copyright (c) 2017 M. Fomento, Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC). Publicado bajo licencia MIT."
 });
 parser.addArgument(
   '-v',
@@ -70,15 +70,14 @@ parser.addArgument(
   }
 );
 parser.addArgument(
-  '--arearef',
+  ['-a', '--arearef'],
   {
-    help: 'Define el área de referencia [Predefinido : 1.0]',
-    type: Number,
-    defaultValue: AREA_REF
+    help: 'Define el área de referencia',
+    type: Number
   }
 );
 parser.addArgument(
-  '--kexp',
+  ['-k', '--kexp'],
   {
     help: 'Define el factor de exportación (k_exp) [Predefinido: 0.0]',
     type: Number,
@@ -86,12 +85,46 @@ parser.addArgument(
   }
 );
 parser.addArgument(
-  '--vectores',
+  ['-c', '--vectores'],
   {
     help: 'Usa el archivo de vectores energético',
     type: String,
     dest: 'vectores_archivo',
     defaultValue: ''
+  }
+);
+parser.addArgument(
+  ['-f', '--fps'],
+  {
+    help: 'Usa un archivo para definir los factores de paso',
+    type: String,
+    dest: 'fps_archivo',
+    defaultValue: ''
+  }
+);
+parser.addArgument(
+  ['-l', '--fpsloc'],
+  {
+    help: 'Usa una localización para generar los factores de paso. [Predefinido: PENINSULA]',
+    type: String,
+    choices: ['PENINSULA', 'CANARIAS', 'BALEARES', 'CEUTAYMELILLA'],
+    defaultValue: 'PENINSULA'
+  }
+);
+parser.addArgument(
+  '--cogen',
+  {
+    help: 'Indica los factores de exportación (ren, nren) a la red y a usos no EPB de electricidad cogenerada. P.e.: --cogen 0 2.5 0 2.5',
+    type: Number,
+    nargs: 4
+  }
+);
+parser.addArgument(
+  '--red',
+  {
+    help: 'Indica los factores de paso (ren, nren) de los vectores RED1 y RED2. P.e.: --red 0 1.3 0 1.3',
+    type: Number,
+    nargs: 4
   }
 );
 parser.addArgument(
@@ -101,24 +134,6 @@ parser.addArgument(
     type: String,
     dest: 'gen_vectores_archivo',
     defaultValue: ''
-  }
-);
-parser.addArgument(
-  '--fps',
-  {
-    help: 'Usa un archivo para definir los factores de paso',
-    type: String,
-    dest: 'fps_archivo',
-    defaultValue: ''
-  }
-);
-parser.addArgument(
-  '--fpsloc',
-  {
-    help: 'Usa una localización para generar los factores de paso. [Predefinido: PENINSULA]',
-    type: String,
-    choices: ['PENINSULA', 'CANARIAS', 'BALEARES', 'CEUTAYMELILLA'],
-    defaultValue: 'PENINSULA'
   }
 );
 parser.addArgument(
@@ -133,26 +148,38 @@ parser.addArgument(
 parser.addArgument(
   '--json',
   {
-    help: 'Obtiene balance energético en formato JSON [Predefinido: no]',
-    type: Boolean,
-    dest: 'isjson',
-    action: 'storeConst',
-    constant: true,
-    defaultValue: false,
+    help: 'Guarda balance energético en formato JSON',
+    type: String,
+    dest: 'gen_json_archivo',
+    defaultValue: '',
   }
 );
 parser.addArgument(
   '--xml',
   {
-    help: 'Obtiene resultados en formato XML [Predefinido: no]',
+    help: 'Guarda balance energético en formato XML',
+    type: String,
+    dest: 'gen_xml_archivo',
+    defaultValue: ''
+  }
+);
+parser.addArgument(
+  '--no_simplifica_fps',
+  {
+    help: 'No realiza simplificación de factores de paso a partir de los vectores definidos',
     type: Boolean,
-    dest: 'isxml',
+    dest: 'nosimplificafps',
     action: 'storeConst',
     constant: true,
     defaultValue: false
   }
 );
 const args = parser.parseArgs();
+if (process.argv.length < 3) {
+  parser.printHelp();
+  process.exit();
+}
+
 const verbosity = args.verbosity;
 
 if (verbosity > 2) {
@@ -161,63 +188,137 @@ if (verbosity > 2) {
   console.log("------------------------------");
 }
 
-// Read area_ref
-const arearef = args.arearef;
-if (verbosity > 0) { console.log(`Área de referencia: ${ arearef } m²`); }
-
-// Read kexp
+// Lee kexp
 const kexp = args.kexp;
+if (verbosity > 0) {
+  console.log(`Factor de exportación k_exp = ${ args.vectores_archivo }`);
+}
+if (kexp < 0 || kexp > 1) {
+  console.log(`ERROR: el factor de exportación debe estar entre 0.0 y 1.0 y vale ${ kexp }`);
+}
+if (kexp !== 0) {
+  console.log("AVISO: se está usando un factor de exportación distinto al reglamentario (CTE DB-HE) k_exp = 0");
+}
 
 // Leer vectores energéticos y corregirlos
 let carriers;
 if (args.vectores_archivo !== '') {
-  if (verbosity > 0) { console.log("Archivo de vectores: ", args.vectores_archivo); }
   try {
     const datastring = fs.readFileSync(args.vectores_archivo, 'utf-8');
     carriers = cte.parse_carrier_list(datastring);
-    //console.log("carriers sin valores: ", carriers.filter(c => !c.values));
-    // TODO: ver si se define en metadatos el area_ref
   } catch (e) {
     console.log(`ERROR: No se ha podido leer el archivo de vectores energéticos "${ args.vectores_archivo }"`);
+  } finally {
+    if (verbosity > 0) { console.log(`Vectores energéticos (${ args.vectores_archivo })`); }
   }
 }
 
-// Guardar vectores corregidos
+// Lee area_ref
+let c_arearef = null;
+if (carriers) {
+  const metaarea = carriers.find(c => c.type === 'META' && c.key === 'Area_ref');
+  c_arearef = metaarea ? metaarea.value : null;
+}
+
+let arearef;
+if(c_arearef === null) { // No se define Area_ref en metadatos de vectores energéticos
+  if (args.arearef !== null) {
+    arearef = args.arearef;
+  } else {
+    arearef = AREA_REF;
+    if (verbosity > 0) { console.log(`Usando área de referencia predefinida)`); }
+  }
+} else { // Se define Area_ref en metadatos de vectores energéticos
+  if (args.arearef === null) {
+    if (verbosity > 0) { console.log(`Usando área de referencia de metadatos`); }
+    arearef = c_arearef;
+  } else {
+    if (c_arearef !== args.arearef) {
+      console.log(`AVISO: El valor del área de referencia del archivo de vectores energéticos (${ c_arearef }) no coincide con el valor definido por el usuario (${ args.arearef })`);
+    }
+    arearef = args.arearef;
+  }
+}
+if (verbosity > 0) { console.log(`Área de referencia (${ arearef } m²)`); }
+
+// Lee factores de paso
+let fp;
+if (args.fps_archivo !== '') {
+  try {
+    const fpstring = fs.readFileSync(args.fps_archivo, 'utf-8');
+    fp = cte.parse_weighting_factors(fpstring);
+  } catch (e) {
+    console.log(`ERROR: No se ha podido leer el archivo de factores de paso "${ args.fps_archivo }"`);
+  } finally {
+    if (verbosity > 0) { console.log(`Factores de paso (${ args.fps_archivo })`); }
+  }
+} else if (args.fpsloc) {
+  if (verbosity > 0) { console.log(`Factores de paso (${ args.fpsloc })`); }
+  let red = null;
+  let cogen = null;
+  if (args.red !== null) {
+    const [r1_ren, r1_nren, r2_ren, r2_nren] = args.red;
+    if (verbosity > 0) {
+      console.log(`- RED1, RED, input, A, ${ r1_ren }, ${ r1_nren } `);
+      console.log(`- RED2, RED, input, A, ${ r2_ren }, ${ r2_nren } `);
+    }
+    red = {
+      RED1: { ren: r1_ren, nren: r1_nren }, // RED1, RED, input, A, ren, nren
+      RED2: { ren: r2_ren, nren: r2_nren }  // RED2, RED, input, A, ren, nren
+    };
+  }
+  if (args.cogen !== null) {
+    const [cgrid_ren, cgrid_nren, cnepb_ren, cnepb_nren] = args.cogen;
+    if (verbosity > 0) {
+      console.log(`- ELECTRICIDAD, COGENERACION, to_grid, A, ${ cgrid_ren }, ${ cgrid_nren } `);
+      console.log(`- ELECTRICIDAD, COGENERACION, to_nEPB, A, ${ cnepb_ren }, ${ cnepb_nren } `);
+    }
+    cogen = {
+      to_grid: { ren: cgrid_ren, nren: cgrid_nren }, // ELECTRICIDAD, COGENERACION, to_grid, A, ren, nren
+      to_nEPB: { ren: cnepb_ren, nren: cnepb_nren }  // ELECTRICIDAD, COGENERACION, to_nEPB, A, ren, nren
+    };
+  }
+  try {
+    fp = cte.new_weighting_factors(args.fpsloc, { red, cogen });
+  } catch (e) {
+    console.log("ERROR: No se han podido generar los factores de paso");
+    if(verbosity > 2) { throw(e); } else { process.exit() }
+  }
+} else {
+  console.log("[ERROR]: No se han definido factores de paso");
+  process.exit();
+}
+
+// Guardar vectores
 if (args.gen_vectores_archivo !== '') {
   const carrierstring = serialize_carrier_list(carriers);
   fs.writeFile(args.gen_vectores_archivo, carrierstring, 'utf-8',
     err => {
       if (err) {
         console.log(`ERROR: No se ha podido escribir en "${ args.gen_vectores_archivo}" debido al error: ${ err }`);
+      } else {
+        if (verbosity > 0) { console.log(`Guardado archivo de vectores energéticos (${ args.gen_vectores_archivo })`); }
       }
     }
   );
 }
 
-// Read weighting factors
-let fp;
-if (args.fps_archivo !== '') {
-  if (verbosity > 0) { console.log("Archivo de factores de paso: ", args.fps_archivo); }
-  try {
-    const fpstring = fs.readFileSync(args.fps_archivo, 'utf-8');
-    fp = cte.parse_weighting_factors(fpstring);
-  } catch (e) {
-    console.log(`ERROR: No se ha podido leer el archivo de factores de paso "${ args.fps_archivo }"`);
-  }
-} else if (args.fps_loc) {
-  // TODO: Mirar antes si están definidos cogen y red1|red2
-  fp = cte.new_weighting_factors(args.fps_loc);
+// Simplificar factores de paso
+if(carriers && !args.nosimplificafps) {
+  const oldlen = fp.length;
+  fp = cte.strip_weighting_factors(fp, carriers);
+  if (verbosity > 1) { console.log(`Reducción de factores de paso (${ oldlen } -> ${ fp.length })`); }
 }
 
 // Guardar factores de paso corregidos
 if (args.gen_fps_archivo !== '') {
-  // TODO: ¿limpiar factores antes de exportarlos?
   const fpstring = serialize_weighting_factors(fp);
-  const outpath = path.resolve(__dirname, args.gen_fps_archivo);
-  fs.writeFile(outpath, fpstring, 'utf-8',
+  fs.writeFile(args.gen_fps_archivo, fpstring, 'utf-8',
     err => {
       if (err) {
         console.log(`ERROR: No se ha podido escribir en "${ args.gen_fps_archivo}" debido al error: ${ err }`);
+      } else {
+        if (verbosity > 0) { console.log(`Guardado archivo de factores de paso (${ args.gen_fps_archivo })`); }
       }
     }
   );
@@ -226,7 +327,6 @@ if (args.gen_fps_archivo !== '') {
 // Compute primary energy (weighted energy)
 let balance;
 if (carriers && fp) {
-  if (verbosity > 0) { console.log("Calculando el balance energético"); }
   try {
     balance = energy_performance(carriers, fp, kexp);
   } catch (e) {
@@ -237,13 +337,26 @@ if (carriers && fp) {
 
 // Show result
 if (balance) {
-  if (args.isjson) {
-    // JSON
-    console.log(JSON.stringify(balance, null, '  '));  
-  } else if (args.isxml) {
-    // TODO: XML
-    console.log("Salida XML");
-  } else {
-    console.log(show_final_EP(balance.EP, arearef));
+  // Guardar balance en formato json
+  if (args.gen_json_archivo !== '') {
+    if (verbosity > 0) { console.log(`Resultados en formato JSON (${ args.gen_json_archivo })`); }
+    // TODO: ¿limpiar factores antes de exportarlos?
+    const jsonbalancestring = JSON.stringify(balance, null, '  ');
+    fs.writeFile(args.gen_json_archivo, jsonbalancestring, 'utf-8',
+      err => {
+        if (err) {
+          console.log(`ERROR: No se ha podido escribir en "${args.gen_json_archivo}" debido al error: ${err}`);
+        }
+      }
+    );
   }
+  if (args.gen_xml_archivo !== '') {
+    // TODO: XML
+    if (verbosity > 0) { console.log(`Resultados en formato XML (${ args.gen_xml_archivo })`); }
+    console.log("Funcionalidad sin implementar");
+    console.log("Salida XML");
+  }
+
+  if (verbosity > 0) { console.log("Balance energético:"); }
+  console.log(show_final_EP(balance.EP, arearef));
 }
