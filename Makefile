@@ -23,7 +23,7 @@ nodebin: ${WINBUILDDIR}
 	wget -cN http://nodejs.org/dist/${NODEBINDIR}/${NODEBIN}
 	unzip -jo ${NODEBIN} '*/node.exe' -d ${WINBUILDDIR}
 
-dist: ${BUILDDIR} ${SRCDIR}/index.js
+dist: ${BUILDDIR} ${SRCDIR}/cteepbd.js
 	npm run bundle
 
 distwin32: nodebin dist
