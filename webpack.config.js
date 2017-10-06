@@ -4,7 +4,7 @@ module.exports = (env = {}) => {
   const plugins = env.production ? [ new MinifyPlugin ] : [];
   return {
     entry: {
-      cteepbd: './src/index.js'
+      cteepbd: './src/cteepbd.js'
     },
     target: 'node',
     output: {
