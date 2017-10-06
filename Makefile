@@ -28,6 +28,8 @@ dist: ${BUILDDIR} ${SRCDIR}/index.js
 
 distwin32: nodebin dist
 	cp ${BUILDDIR}/${OUTSCRIPT} ${WINBUILDDIR}
+	cp ./${SRCDIR}/LICENSE ./${WINBUILDDIR}/cteepbd.LICENSE
+	cp LICENSE README.md ./${WINBUILDDIR}/cteepbd.README.md
 
 clean:
 	rm -rf lib/
