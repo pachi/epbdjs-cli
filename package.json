@@ -5,6 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "rimraf lib/* && babel ./src --out-dir ./lib && npm run copy",
+    "bundle": "webpack --config webpack.config.js --env.production",
+    "bundledev": "webpack --config webpack.config.js",
     "copy": "ncp ./src/examples ./lib && ncp README.md lib/README.md && ncp LICENSE lib/LICENSE && ncp TODO lib/TODO",
     "prepare": "npm run build",
     "test": "echo \"Testing epbdjs-cli\" && node src/test.js",
@@ -37,6 +39,7 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "^7.2.3",
+    "babel-minify-webpack-plugin": "^0.2.0",
     "babel-plugin-transform-export-extensions": "^6.22.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-polyfill": "^6.26.0",
@@ -49,11 +52,12 @@
     "eslint-plugin-sorting": "^0.3.0",
     "ncp": "^2.0.0",
     "rimraf": "^2.6.2",
-    "watch": "^1.0.2"
+    "watch": "^1.0.2",
+    "webpack": "^3.6.0"
   },
   "dependencies": {
     "argparse": "^1.0.9",
-    "epbdjs": "^4.2.0"
+    "epbdjs": "^4.3.0"
   },
   "babel": {
     "presets": [

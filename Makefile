@@ -7,7 +7,8 @@ OUTSCRIPT=cteepbd.js
 TESTFP:=src/examples/factores_paso_20140203.csv
 TESTCARRIERS:=src/examples/cte_test_carriers.csv
 
-test: ${BUILDDIR}/${OUTSCRIPT} ${BUILDDIR}/examples
+test:
+	npm run bundledev
 	node ${BUILDDIR}/${OUTSCRIPT} --help
 	node ${BUILDDIR}/${OUTSCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} --arearef 200 --json balance.json
 	node lib/cteepbd.js -c src/examples/cte_test_carriers.csv -l PENINSULA --cogen 0 2.5 0 2.5 -vv
@@ -22,8 +23,9 @@ nodebin: ${WINBUILDDIR} ${BUILDDIR}/${OUTSCRIPT}
 	wget -cN http://nodejs.org/dist/${NODEBINDIR}/${NODEBIN}
 	unzip -jo ${NODEBIN} '*/node.exe' -d ${WINBUILDDIR}
 
-# TODO: poner todo en un solo archivo con webpack --target:node
-distwin32: nodebin ${BUILDDIR}/${OUTSCRIPT}
+dist: ${BUILDDIR}/${OUTSCRIPT}
+
+distwin32: dist nodebin ${BUILDDIR}/${OUTSCRIPT}
 	cp ${BUILDDIR}/${OUTSCRIPT} ${WINBUILDDIR}
 
 clean:
@@ -39,4 +41,4 @@ ${BUILDDIR}/examples:
 	cp -r ./${SRCDIR}/examples ./${BUILDDIR}
 
 ${BUILDDIR}/${OUTSCRIPT}: ${BUILDDIR} ${SRCDIR}/index.js
-	./node_modules/.bin/babel -o ${BUILDDIR}/${OUTSCRIPT} ${SRCDIR}/index.js
+	npm run bundle
