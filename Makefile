@@ -18,14 +18,15 @@ installpackages:
 	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 	sudo aptitude install nodejs
 
-nodebin: ${WINBUILDDIR} ${BUILDDIR}/${OUTSCRIPT}
+nodebin: ${WINBUILDDIR}
 	$(info [INFO]: Obtención del intérprete para win32 de NodeJS)
 	wget -cN http://nodejs.org/dist/${NODEBINDIR}/${NODEBIN}
 	unzip -jo ${NODEBIN} '*/node.exe' -d ${WINBUILDDIR}
 
-dist: ${BUILDDIR}/${OUTSCRIPT}
+dist: ${BUILDDIR} ${SRCDIR}/index.js
+	npm run bundle
 
-distwin32: dist nodebin ${BUILDDIR}/${OUTSCRIPT}
+distwin32: nodebin dist
 	cp ${BUILDDIR}/${OUTSCRIPT} ${WINBUILDDIR}
 
 clean:
@@ -39,6 +40,3 @@ ${BUILDDIR}:
 
 ${BUILDDIR}/examples:
 	cp -r ./${SRCDIR}/examples ./${BUILDDIR}
-
-${BUILDDIR}/${OUTSCRIPT}: ${BUILDDIR} ${SRCDIR}/index.js
-	npm run bundle
