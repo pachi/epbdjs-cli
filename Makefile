@@ -24,12 +24,14 @@ nodebin: ${WINBUILDDIR}
 	unzip -jo ${NODEBIN} '*/node.exe' -d ${WINBUILDDIR}
 
 dist: ${BUILDDIR} ${SRCDIR}/cteepbd.js
+	$(info [INFO]: Compilando versión de producción)
 	npm run bundle
 
 distwin32: nodebin dist
+	$(info [INFO]: Preparando versión para distribución en windows 32bit)
 	cp ${BUILDDIR}/${OUTSCRIPT} ${WINBUILDDIR}
-	cp ./${SRCDIR}/LICENSE ./${WINBUILDDIR}/cteepbd.LICENSE
-	cp LICENSE README.md ./${WINBUILDDIR}/cteepbd.README.md
+	cp LICENSE ./${WINBUILDDIR}/cteepbd.LICENSE
+	cp README.md ./${WINBUILDDIR}/cteepbd.README.md
 
 clean:
 	rm -rf lib/
@@ -39,6 +41,3 @@ ${WINBUILDDIR}:
 
 ${BUILDDIR}:
 	mkdir -p ${BUILDDIR}
-
-${BUILDDIR}/examples:
-	cp -r ./${SRCDIR}/examples ./${BUILDDIR}
