@@ -1,6 +1,8 @@
-# EPBDjs
+# CTEEPBD
 
 CLI for the `epbdjs` implementation of the ISO EN 52000-1 "Energy performance of buildings" standard.
+
+Interfaz de línea de comandos para la evaluación energética de edificios para el CTE DB-HE. Implementa la norma ISO EN 52000-1.
 
 ## Introduction
 
@@ -17,7 +19,9 @@ The underlying implementation uses the following assumptions:
 
 ### CLI
 
-Not implemented
+See help using:
+
+    $ node cteepbd.js --help
 
 ### Tests
 **To run the tests** type ```make``` on the command line.
