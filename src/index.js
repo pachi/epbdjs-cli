@@ -28,7 +28,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
 /* eslint-disable no-console */
 import * as fs from 'fs';
-import { ArgumentParser } from 'argparse';
+import argparse, { ArgumentParser } from 'argparse';
 
 import {
   energy_performance,
@@ -36,6 +36,11 @@ import {
   serialize_weighting_factors,
   cte
 } from 'epbdjs';
+
+
+const KEXP = 0.0;
+const AREA_REF = 1.0;
+const VERSION = '1.0';
 
 function show_final_EP(ep, area=1.0) {
   const { ren, nren } = ep['B'];
@@ -52,14 +57,20 @@ function show_final_EP(ep, area=1.0) {
     + `, RER = ${ (ren / (ren + nren)).toFixed(2) }`;
 }
 
-const KEXP = 0.0;
-const AREA_REF = 1.0;
-
 var parser = new ArgumentParser({
   addHelp:true,
   prog: 'cteepbd',
-  description: 'cteepbd [v.1.0.0] - Cálculo de la eficiencia energética de los edificios (CTE DB-HE)',
-  epilog: "Copyright (c) 2017 M. Fomento, Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC). Publicado bajo licencia MIT."
+  formatterClass: argparse.RawDescriptionHelpFormatter,
+  description:
+`cteepbd ${ VERSION } - Eficiencia energética de los edificios (CTE DB-HE)
+
+    Copyright (c) 2017 Ministerio de Fomento,
+                       Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
+    Autores: Rafael Villar Burke <pachi@ietcc.csic.es>,
+             Daniel Jiménez González <danielj@ietcc.csic.es>
+             Marta Sorribes Gil <msorribes@ietcc.csic.es>
+    Publicado bajo licencia MIT.
+`
 });
 parser.addArgument(
   '-v',
