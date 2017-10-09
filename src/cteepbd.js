@@ -392,7 +392,6 @@ if (balance) {
   // Guardar balance en formato json
   if (args.gen_json_archivo !== '') {
     if (verbosity > 0) { console.log(`Resultados en formato JSON (${ args.gen_json_archivo })`); }
-    // TODO: ¿limpiar factores antes de exportarlos?
     const jsonbalancestring = JSON.stringify(balance, null, '  ');
     fs.writeFile(args.gen_json_archivo, jsonbalancestring, 'utf-8',
       err => {
