@@ -31,18 +31,18 @@ import * as fs from 'fs';
 import argparse, { ArgumentParser } from 'argparse';
 
 import {
-  get_metas,
+  filter_metas,
   energy_performance,
-  serialize_carrier_list,
-  serialize_weighting_factors,
+  serialize_carrierdata,
+  serialize_wfactordata,
   cte
 } from 'epbdjs';
 
 const {
-  parse_carrier_list,
-  new_weighting_factors,
-  parse_weighting_factors,
-  strip_weighting_factors,
+  parse_carrierdata,
+  new_wfactordata,
+  parse_wfactordata,
+  strip_wfactordata,
   balance_to_plain,
   balance_to_JSON,
   balance_to_XML
@@ -248,11 +248,11 @@ if (kexp !== 0) {
 }
 
 // Leer vectores energéticos y corregirlos
-let carriers;
+let carrierdata;
 if (args.vectores_archivo !== '') {
   try {
     const datastring = fs.readFileSync(args.vectores_archivo, 'utf-8');
-    carriers = parse_carrier_list(datastring);
+    carrierdata = parse_carrierdata(datastring);
   } catch (e) {
     console.log(`ERROR: No se ha podido leer el archivo de vectores energéticos "${ args.vectores_archivo }"`);
   } finally {
@@ -262,8 +262,8 @@ if (args.vectores_archivo !== '') {
 
 // Lee area_ref
 let c_arearef = null;
-if (carriers) {
-  const metas = get_metas(carriers);
+if (carrierdata) {
+  const metas = filter_metas(carrierdata);
   const metaarea = metas.find(c => c.key === 'Area_ref');
   c_arearef = metaarea ? metaarea.value : null;
 }
@@ -290,11 +290,11 @@ if(c_arearef === null) { // No se define Area_ref en metadatos de vectores energ
 if (verbosity > 0) { console.log(`Área de referencia (${ arearef } m²)`); }
 
 // Lee factores de paso
-let fp;
+let fpdata;
 if (args.fps_archivo !== '') {
   try {
     const fpstring = fs.readFileSync(args.fps_archivo, 'utf-8');
-    fp = parse_weighting_factors(fpstring);
+    fpdata = parse_wfactordata(fpstring);
   } catch (e) {
     console.log(`ERROR: No se ha podido leer el archivo de factores de paso "${ args.fps_archivo }"`);
   } finally {
@@ -327,7 +327,7 @@ if (args.fps_archivo !== '') {
     };
   }
   try {
-    fp = new_weighting_factors(args.fpsloc, { red, cogen });
+    fpdata = new_wfactordata(args.fpsloc, { red, cogen });
   } catch (e) {
     console.log("ERROR: No se han podido generar los factores de paso");
     if(verbosity > 2) { throw(e); } else { process.exit() }
@@ -339,7 +339,7 @@ if (args.fps_archivo !== '') {
 
 // Guardar vectores
 if (args.gen_vectores_archivo !== '') {
-  const carrierstring = serialize_carrier_list(carriers);
+  const carrierstring = serialize_carrierdata(carrierdata);
   fs.writeFile(args.gen_vectores_archivo, carrierstring, 'utf-8',
     err => {
       if (err) {
@@ -352,15 +352,15 @@ if (args.gen_vectores_archivo !== '') {
 }
 
 // Simplificar factores de paso
-if(carriers && !args.nosimplificafps) {
-  const oldlen = fp.length;
-  fp = strip_weighting_factors(fp, carriers);
-  if (verbosity > 1) { console.log(`Reducción de factores de paso (${ oldlen } -> ${ fp.length })`); }
+if(carrierdata && !args.nosimplificafps) {
+  const oldfplen = fpdata.length;
+  fpdata = strip_wfactordata(fpdata, carrierdata);
+  if (verbosity > 1) { console.log(`Reducción de factores de paso (${ oldfplen } -> ${ fpdata.length })`); }
 }
 
 // Guardar factores de paso corregidos
 if (args.gen_fps_archivo !== '') {
-  const fpstring = serialize_weighting_factors(fp);
+  const fpstring = serialize_wfactordata(fpdata);
   fs.writeFile(args.gen_fps_archivo, fpstring, 'utf-8',
     err => {
       if (err) {
@@ -374,9 +374,9 @@ if (args.gen_fps_archivo !== '') {
 
 // Compute primary energy (weighted energy)
 let balance;
-if (carriers && fp) {
+if (carrierdata && fpdata) {
   try {
-    balance = energy_performance(carriers, fp, kexp);
+    balance = energy_performance(carrierdata, fpdata, kexp);
   } catch (e) {
     console.log(`ERROR: No se ha podido calcular el balance energético`);
     throw e;
@@ -388,7 +388,7 @@ if (balance) {
   // Guardar balance en formato json
   if (args.gen_json_archivo !== '') {
     if (verbosity > 0) { console.log(`Resultados en formato JSON (${ args.gen_json_archivo })`); }
-    const jsonbalancestring = cte.balance_to_JSON(balance);
+    const jsonbalancestring = balance_to_JSON(balance);
     fs.writeFile(args.gen_json_archivo, jsonbalancestring, 'utf-8',
       err => {
         if (err) {
@@ -397,6 +397,7 @@ if (balance) {
       }
     );
   }
+  // Guardar balance en formato XML
   if (args.gen_xml_archivo !== '') {
     if (verbosity > 0) { console.log(`Resultados en formato XML (${ args.gen_xml_archivo })`); }
     const xmlstring = balance_to_XML(balance, arearef);
@@ -408,7 +409,7 @@ if (balance) {
       }
     );
   }
-
+  // Mostrar en formato plain
   if (verbosity > 0) { console.log("Balance energético:"); }
   console.log(balance_to_plain(balance, arearef));
 }
