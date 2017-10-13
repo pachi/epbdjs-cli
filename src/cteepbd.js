@@ -344,18 +344,18 @@ if(c_arearef === null) { // No se define Area_ref en metadatos de vectores energ
     arearef = args.arearef;
   } else {
     arearef = AREA_REF;
-    console.log(`Área de referencia (predefinida) [m²]: ${ arearef }`);
+    console.log(`Área de referencia (predefinida) [m2]: ${ arearef }`);
   }
 } else { // Se define Area_ref en metadatos de vectores energéticos
   if (args.arearef === null) {
     arearef = c_arearef;
-    console.log(`Área de referencia (metadatos) [m²]: ${ arearef }`);
+    console.log(`Área de referencia (metadatos) [m2]: ${ arearef }`);
   } else {
     if (c_arearef !== args.arearef) {
       console.log(`AVISO: El valor del área de referencia del archivo de vectores energéticos (${ c_arearef }) no coincide con el valor definido por el usuario (${ args.arearef })`);
     }
     arearef = args.arearef;
-    console.log(`Área de referencia (usuario) [m²]: ${ arearef }`);
+    console.log(`Área de referencia (usuario) [m2]: ${ arearef }`);
   }
 }
 
