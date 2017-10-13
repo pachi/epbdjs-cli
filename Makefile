@@ -10,7 +10,7 @@ TESTCARRIERS:=src/examples/cte_test_carriers.csv
 test:
 	npm run bundledev
 	node ${BUILDDIR}/${OUTSCRIPT} --help
-	node ${BUILDDIR}/${OUTSCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} --arearef 200 --json balance.json --xml balance.xml
+	node ${BUILDDIR}/${OUTSCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 -o balance.txt --json balance.json --xml balance.xml
 	node lib/cteepbd.js -c src/examples/cte_test_carriers.csv -l PENINSULA --cogen 0 2.5 0 2.5 -vv
 
 installpackages:
