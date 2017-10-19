@@ -81,7 +81,7 @@ parser.addArgument(
 parser.addArgument(
   '-a',
   {
-    help: 'Define el área de referencia [Predefinida: 1]',
+    help: 'Área de referencia [Predefinida: 1]',
     type: Number,
     dest: 'arearef'
   }
@@ -89,7 +89,7 @@ parser.addArgument(
 parser.addArgument(
   '-k',
   {
-    help: 'Define el factor de exportación (k_exp) [Predefinido: 0.0]',
+    help: 'Factor de exportación (k_exp) [Predefinido: 0.0]',
     type: Number,
     dest: 'kexp'
   }
@@ -97,7 +97,7 @@ parser.addArgument(
 parser.addArgument(
   '-c',
   {
-    help: 'Usa el archivo de componentes energéticos',
+    help: 'Archivo de definición de los componentes energéticos',
     type: String,
     dest: 'archivo_componentes',
     defaultValue: ''
@@ -115,7 +115,7 @@ parser.addArgument(
 parser.addArgument(
   '-l',
   {
-    help: 'Localización para definir los factores de paso',
+    help: 'Localización que define los factores de paso',
     type: String,
     dest: 'fps_loc',
     choices: ['PENINSULA', 'CANARIAS', 'BALEARES', 'CEUTAYMELILLA'],
@@ -125,7 +125,7 @@ parser.addArgument(
 parser.addArgument(
   '--oc',
   {
-    help: 'Guarda el archivo de vectores energéticos corregidos',
+    help: 'Archivo de salida de los vectores energéticos corregidos',
     type: String,
     dest: 'gen_archivo_componentes',
     defaultValue: ''
@@ -134,7 +134,7 @@ parser.addArgument(
 parser.addArgument(
   '--of',
   {
-    help: 'Guarda el archivo de factores de paso corregidos',
+    help: 'Archivo de salida de los factores de paso corregidos',
     type: String,
     dest: 'gen_archivo_factores',
     defaultValue: ''
@@ -143,7 +143,7 @@ parser.addArgument(
 parser.addArgument(
   '--json',
   {
-    help: 'Guarda el resultado detallado del balance energético en formato JSON',
+    help: 'Archivo de salida de resultados detallados en formato JSON',
     type: String,
     dest: 'archivo_salida_json',
     defaultValue: '',
@@ -152,7 +152,7 @@ parser.addArgument(
 parser.addArgument(
   '--xml',
   {
-    help: 'Guarda el resultado en en formato XML',
+    help: 'Archivo de salida de resultados en formato XML',
     type: String,
     dest: 'archivo_salida_xml',
     defaultValue: ''
@@ -161,7 +161,7 @@ parser.addArgument(
 parser.addArgument(
   '--cogen',
   {
-    help: 'Indica los factores de exportación (ren, nren) a la red y a usos no EPB de electricidad cogenerada. P.e.: --cogen 0 2.5 0 2.5',
+    help: 'Factores de exportación (ren, nren) a la red y a usos no EPB de electricidad cogenerada. P.e.: --cogen 0 2.5 0 2.5',
     type: Number,
     nargs: 4
   }
@@ -169,7 +169,7 @@ parser.addArgument(
 parser.addArgument(
   '--red',
   {
-    help: 'Indica los factores de paso (ren, nren) de los vectores RED1 y RED2. P.e.: --red 0 1.3 0 1.3',
+    help: 'Factores de paso (ren, nren) de los vectores RED1 y RED2. P.e.: --red 0 1.3 0 1.3',
     type: Number,
     nargs: 4
   }
@@ -177,7 +177,7 @@ parser.addArgument(
 parser.addArgument(
   '--no_simplifica_fps',
   {
-    help: 'Indica que no se realice la simplificación de factores de paso a partir de los vectores definidos',
+    help: 'Evita la simplificación de los factores de paso a partir de los vectores definidos',
     type: Boolean,
     dest: 'nosimplificafps',
     action: 'storeConst',
@@ -275,6 +275,7 @@ if (args.archivo_componentes !== '') {
     carrierdata = parse_carrierdata(datastring);
   } catch (e) {
     console.log(`ERROR: No se ha podido leer el archivo de componentes energéticos "${ args.archivo_componentes }"`);
+    throw e;
   } finally {
     console.log(`Componentes energéticos: "${ args.archivo_componentes }"`);
   }
