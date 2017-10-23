@@ -6,6 +6,10 @@ NODEBIN=node-v8.6.0-win-x86.zip
 OUTSCRIPT=cteepbd.js
 TESTFP:=src/examples/factores_paso_20140203.csv
 TESTCARRIERS:=src/examples/cte_test_carriers.csv
+EXAMPLESDIR:=docs/ejemplos
+EXAMPLESK:=$(foreach dir,$(EXAMPLESDIR),$(wildcard $(dir)/ejemplo[123456]*.csv))
+EXAMPLESJ:=$(foreach dir,$(EXAMPLESDIR),$(wildcard $(dir)/ejemploJ[123456789]*.csv))
+OUTDIR:=docs/ejemplos/output
 
 test:
 	npm run bundledev
@@ -41,3 +45,15 @@ ${WINBUILDDIR}:
 
 ${BUILDDIR}:
 	mkdir -p ${BUILDDIR}
+
+${OUTDIR}:
+	mkdir -p ${OUTDIR}
+
+.PHONY: buildexamplesK $(EXAMPLESK)
+buildexamplesK: $(OUTDIR) $(EXAMPLESK)
+.PHONY: buildexamplesJ $(EXAMPLESJ)
+buildexamplesJ: $(OUTDIR) $(EXAMPLESJ)
+$(EXAMPLESK):
+	node lib/cteepbd.js -c "$@" -l PENINSULA > "$(subst .csv,.out,$(subst $(EXAMPLESDIR),$(OUTDIR),$@))"
+$(EXAMPLESJ):
+	node lib/cteepbd.js -c "$@" -l PENINSULA > "$(subst .csv,.out,$(subst $(EXAMPLESDIR),$(OUTDIR),$@))"
