@@ -5,4 +5,7 @@ public
 stats.json
 *.log
 *.generated.*
+docs/ejemplos/output
+balance.*
+winbuild
 npm-debug.log
