@@ -2,7 +2,7 @@ SRCDIR:=src
 BUILDDIR:=lib
 WINBUILDDIR:=winbuild
 NODEBINDIR=latest-v8.x
-NODEBIN=node-v8.6.0-win-x86.zip
+NODEBIN=node-v8.7.0-win-x86.zip
 OUTSCRIPT=cteepbd.js
 TESTFP:=src/examples/factores_paso_20140203.csv
 TESTCARRIERS:=src/examples/cte_test_carriers.csv
@@ -10,6 +10,9 @@ EXAMPLESDIR:=docs/ejemplos
 EXAMPLESK:=$(foreach dir,$(EXAMPLESDIR),$(wildcard $(dir)/ejemplo[123456]*.csv))
 EXAMPLESJ:=$(foreach dir,$(EXAMPLESDIR),$(wildcard $(dir)/ejemploJ[123456789]*.csv))
 OUTDIR:=docs/ejemplos/output
+
+UPX := $(shell which upx 2> /dev/null)
+PDFLATEX := $(shell which pdflatex 2> /dev/null)
 
 test:
 	npm run bundledev
@@ -26,16 +29,29 @@ nodebin: ${WINBUILDDIR}
 	$(info [INFO]: Obtención del intérprete para win32 de NodeJS)
 	wget -cN http://nodejs.org/dist/${NODEBINDIR}/${NODEBIN}
 	unzip -jo ${NODEBIN} '*/node.exe' -d ${WINBUILDDIR}
+ifdef UPX
+	upx -i $(WINBUILDDIR)/node.exe -v
+endif
+
+docs: docs/Manual_cteepbd.tex
+ifndef PDFLATEX
+	$(error "Es necesario tener instalado pdflatex para generar la documentación")
+endif
+	cd docs && pdflatex --output-directory=build Manual_cteepbd.tex && pdflatex --output-directory=build Manual_cteepbd.tex
 
 dist: ${BUILDDIR} ${SRCDIR}/cteepbd.js
 	$(info [INFO]: Compilando versión de producción)
 	npm run bundle
 
-distwin32: nodebin dist
+distwin32: nodebin dist docs
 	$(info [INFO]: Preparando versión para distribución en windows 32bit)
 	cp ${BUILDDIR}/${OUTSCRIPT} ${WINBUILDDIR}
 	cp LICENSE ./${WINBUILDDIR}/cteepbd.LICENSE
 	cp README.md ./${WINBUILDDIR}/cteepbd.README.md
+	mkdir -p ${WINBUILDDIR}/ejemplos
+	cp $(EXAMPLESDIR)/*.csv ./${WINBUILDDIR}/ejemplos
+	cp docs/build/Manual_cteepbd.pdf ./${WINBUILDDIR}
+	zip -r "cteepbd-$(shell date +"%Y-%m-%d").zip" ./${WINBUILDDIR}/*
 
 clean:
 	rm -rf lib/
