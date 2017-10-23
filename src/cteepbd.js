@@ -395,6 +395,7 @@ if(carrierdata && !args.nosimplificafps) {
 // Guardado de factores de paso corregidos ------------------------------------------------------
 if (args.gen_archivo_factores !== '') {
   const fpstring = serialize_wfactordata(fpdata);
+  console.log("Factores de paso: ", fpstring);
   fs.writeFile(args.gen_archivo_factores, fpstring, 'utf-8',
     err => {
       if (err) {
