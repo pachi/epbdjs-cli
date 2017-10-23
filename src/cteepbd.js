@@ -417,8 +417,7 @@ if (carrierdata && fpdata && (kexp !== null)) {
     throw e;
   }
 } else {
-  console.log(`ERROR: no hay datos suficientes para calcular el balance energético`);
-  process.exit();
+  console.log(`No hay datos suficientes para calcular el balance energético`);
 }
 
 // Salida de resultados ------------------------------------------------------------------------
