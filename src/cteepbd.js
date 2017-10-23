@@ -123,6 +123,22 @@ parser.addArgument(
   }
 );
 parser.addArgument(
+  '--cogen',
+  {
+    help: 'Factores de exportación (ren, nren) a la red y a usos no EPB de electricidad cogenerada. P.e.: --cogen 0 2.5 0 2.5',
+    type: Number,
+    nargs: 4
+  }
+);
+parser.addArgument(
+  '--red',
+  {
+    help: 'Factores de paso (ren, nren) de los vectores RED1 y RED2. P.e.: --red 0 1.3 0 1.3',
+    type: Number,
+    nargs: 4
+  }
+);
+parser.addArgument(
   '--oc',
   {
     help: 'Archivo de salida de los vectores energéticos corregidos',
@@ -156,22 +172,6 @@ parser.addArgument(
     type: String,
     dest: 'archivo_salida_xml',
     defaultValue: ''
-  }
-);
-parser.addArgument(
-  '--cogen',
-  {
-    help: 'Factores de exportación (ren, nren) a la red y a usos no EPB de electricidad cogenerada. P.e.: --cogen 0 2.5 0 2.5',
-    type: Number,
-    nargs: 4
-  }
-);
-parser.addArgument(
-  '--red',
-  {
-    help: 'Factores de paso (ren, nren) de los vectores RED1 y RED2. P.e.: --red 0 1.3 0 1.3',
-    type: Number,
-    nargs: 4
   }
 );
 parser.addArgument(
