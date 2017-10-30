@@ -34,13 +34,15 @@ ifdef UPX
 endif
 
 .PHONY: buildexamples $(EXAMPLESJ)
-buildexamples: $(OUTDIR) $(EXAMPLESJ) helpoutput balances
+buildexamples: $(OUTDIR) $(EXAMPLESJ) helpoutput balances factorespaso
 $(EXAMPLESJ):
 	node lib/cteepbd.js -c "$@" -l PENINSULA > "$(subst .csv,.out,$(subst $(EXAMPLESDIR),$(OUTDIR),$@))"
 helpoutput:
 	node lib/cteepbd.js --help > $(OUTDIR)/ayuda.out
 balances:
 	node lib/cteepbd.js -c "$(EXAMPLESDIR)/cte_test_carriers.csv" -l PENINSULA --json "$(OUTDIR)/balance.json" --xml "$(OUTDIR)/balance.xml" > "$(OUTDIR)/balance.plain"
+factorespaso:
+	node lib/cteepbd.js -l PENINSULA --of docs/ejemplos/output/factorespen.csv
 
 docs: buildexamples docs/Manual_cteepbd.tex
 ifndef PDFLATEX
