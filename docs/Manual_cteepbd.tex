@@ -345,9 +345,17 @@ Las líneas de metadatos asocian un valor a una clave y permiten asociar datos a
 
 Su formato es: el texto \texttt{\#META}, seguido de uno o más espacios, el texto que define la clave (sin espacios intermedios), un separador de dos puntos (\texttt{:}), y el valor asociado (que puede contener cualquier carácter alfanumérico).
 
-En el ejemplo, la siguiente línea define un metadato con clave \texttt{Area\_ref} y valor \texttt{200.0}:
+En el ejemplo, la siguiente línea define un metadato con clave \texttt{CTE\_AREAREF} y valor \texttt{200.0}:
 
 \lstinputlisting[firstline=6, lastline=6,numbers=none]{ejemplos/cte_test_carriers.csv}
+
+Para los componentes energéticos se definen los siguientes valores conocidos de metadatos:
+
+\begin{itemize}
+\item \texttt{CTE\_AREAREF}: área de referencia (superficie útil);
+\item \texttt{CTE\_KEXP}; factor de exportación;
+\item \texttt{CTE\_LOCALIZACION}: localización que define los factores de paso reglamentarios (\texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES}, \texttt{PENINSULA}).
+\end{itemize}
 
 \subsubsection{Componentes energéticos}\label{sec:componentesenergeticos}
 
@@ -498,6 +506,15 @@ Cada línea del archivo define un metadato o un par de factores de paso (parte r
 A continuación se muestra el archivo que correspondería a la definición de los factores de paso peninsulares:
 
 \lstinputlisting{ejemplos/output/factorespen.csv}
+
+
+Para los factores de paso se definen los siguientes valores conocidos de metadatos:
+
+\begin{itemize}
+\item \texttt{CTE\_FUENTE}: origen de los datos de factores de paso (\texttt{CTE2013});
+\item \texttt{CTE\_FUENTE\_COMENTARIO}; información original sobre la fuente de datos;
+\item \texttt{CTE\_LOCALIZACION}: localización que define los factores de paso reglamentarios (\texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES}, \texttt{PENINSULA}).
+\end{itemize}
 
 \subsubsection{Metadatos}
 
