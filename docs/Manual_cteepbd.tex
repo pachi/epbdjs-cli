@@ -226,21 +226,21 @@ The application evaluates both the delivered and exported energy according to th
 La interacción con el programa se produce a través de la línea de comandos del sistema operativo (señalada con \$ en este texto), invocando el script \texttt{epbdcalc} con el intérprete de NodeJS (\texttt{node}, o \texttt{node.exe} en sistemas Windows) y añadiendo los parámetros deseados, incluyendo al menos el archivo con los componentes energéticos\footnote{Estos datos se obtienen a partir de los resultados de un programa de evaluación de la eficiencia energética}, y los factores de paso, del siguiente modo:
 
 \begin{Verbatim}[fontsize=\small]
-	$ node cteepbd.js -c src/docs/ejemplos/ejemplo1base.csv -l PENINSULA
+	$ node cteepbd.js -c src/docs/ejemplos/ejemploJ1_base.csv -l PENINSULA
 \end{Verbatim}
 %$
 
 La salida puede redirigirse a un archivo del siguiente modo:
 
 \begin{Verbatim}[fontsize=\small]
-	$ node cteepbd.js -c src/docs/ejemplos/ejemplo1base.csv -l PENINSULA > balance.txt
+	$ node cteepbd.js -c src/docs/ejemplos/ejemploJ1_base.csv -l PENINSULA > balance.txt
 \end{Verbatim}
 %$
 
 La ejecución del programa realiza el procesado del archivo de componentes energéticos
 (\texttt{cte\_test\_carriers.csv} en el ejemplo) y emite los resultados  del cálculo del balance de energía primaria (paso B) por pantalla:
 
-\VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{./ejemplos/output/ejemplo1base.out}
+\VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{./ejemplos/output/ejemploJ1_base.out}
 
 \clearpage
 \newpage
@@ -248,7 +248,7 @@ La ejecución del programa realiza el procesado del archivo de componentes energ
 La llamada al programa sin ningún parámetro o con las opciones \texttt{-h} o \texttt{--help} muestra la ayuda:
 
 \begin{Verbatim}[fontsize=\small]
-	$ node cteepbd --help
+	$ node cteepbd.js --help
 \end{Verbatim}
 %$
 
@@ -583,7 +583,7 @@ A continuación se muestra la salida en el formato XML para el mismo caso anteri
 
 Esta salida guarda la información en la notación de objetos de JavaScript (JSON) y tiene el nivel de detalle más alto.
 
-La salida incluye los componentes energéticos (\texttt{carrierdata}), los factores de paso (\texttt{fpdata}), el factor de exportación (\texttt{kexp}), el área de referencia (\texttt{arearef}), el balance energético para cada intervalo de cálculo y por vector energético (\texttt{balance\_cr\_i}), y el balance global (\texttt{balance}).
+La salida incluye los componentes energéticos (\texttt{components}), los factores de paso (\texttt{wfactors}), el área de referencia (\texttt{arearef}), el factor de exportación (\texttt{k\_exp}), el balance energético para cada intervalo de cálculo y por vector energético (\texttt{balance\_cr\_i}), el balance global (\texttt{balance}), y el balance global repercutido por superficie (\texttt{balance\_m2}).
 
 El balance energético por vector energético (\texttt{balance\_cr\_i}) incluye la energía destinada a usos EPB (\texttt{used\_EPB}), la energía destinada a usos no EPB (\texttt{used\_nEPB}), la energía producida por origen (\texttt{produced\_bygen}) y la total anual por origen (\texttt{produced\_bygen\_an}), la energía producida por intervalo (\texttt{produced}) y la producida total anual (\texttt{produced\_an}), el factor de coincidencia de cargas (\texttt{f\_match}), la energía exportada (\texttt{exported}) y la total exportada anualmente (\texttt{exported\_an}), la exportada por origen (\texttt{exported\_byorigin}) y la exportada anualmente por origen (\texttt{exported\_byorigin\_an}), la exportada a la red (\texttt{exported\_grid}) y la exportada a la red total anual (\texttt{exported\_grid\_an}), la exportada a usos no EPB (\texttt{exported\_nEPB}) y la exportada a usos no EPB total anual (\texttt{exported\_nEPB\_an}), la suministrada por la red (\texttt{delivered\_grid}) y el total suministrado por la red (\texttt{delivered\_grid\_an}), la energía anual ponderada suministrada a la red (\texttt{we\_delivered\_grid\_an}), la energía anual ponderada suministrada producida (\texttt{we\_delivered\_prod\_an}), la energía anual ponderada suministrada (\texttt{we\_delivered\_an}), la energía anual ponderada exportada en el paso A (\texttt{we\_exported\_an\_A}), la energía anual exportada para usos no EPB en el paso AB (\texttt{we\_exported\_nEPB\_an\_AB}), la energía anual exportada a la red en el paso AB (\texttt{we\_exported\_grid\_an\_AB}), la energía anual exportada en el paso B (\texttt{we\_exported\_an}), la energía anual ponderada en el paso A (\texttt{we\_an\_A}) y la energía anual ponderada en el paso B (\texttt{we\_an}).
 
@@ -600,7 +600,7 @@ o, si no se considera como autoconsumidos los usos no EPB:
 \texttt{balance\_cr\_i.ELECTRICIDAD.produced\_an - balance\_cr\_i.ELECTRICIDAD.exported\_an}
 \end{myquote}
 
-El balance global (\texttt{balance}) incluye la parte renovable y no renovable de la energía primaria en el paso A (\texttt{A}), en el paso B (\texttt{B}), la energía primaria suministrada (\texttt{we\_del}), la energía primaria exportada en el paso A (\texttt{we\_exp\_A}) y la energía exportada en el paso B (\texttt{we\_exp}).
+Los balances globales (\texttt{balance}, \texttt{balance\_m2}) incluyen la parte renovable y no renovable de la energía primaria en el paso A (\texttt{A}), en el paso B (\texttt{B}), la energía primaria suministrada (\texttt{we\_del}), la energía primaria exportada en el paso A (\texttt{we\_exp\_A}) y la energía exportada en el paso B (\texttt{we\_exp}).
 
 A continuación se muestra la salida en el formato JSON para el mismo caso anterior:
 

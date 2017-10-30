@@ -33,7 +33,16 @@ ifdef UPX
 	upx -i $(WINBUILDDIR)/node.exe -v
 endif
 
-docs: docs/Manual_cteepbd.tex
+.PHONY: buildexamples $(EXAMPLESJ)
+buildexamples: $(OUTDIR) $(EXAMPLESJ) helpoutput balances
+$(EXAMPLESJ):
+	node lib/cteepbd.js -c "$@" -l PENINSULA > "$(subst .csv,.out,$(subst $(EXAMPLESDIR),$(OUTDIR),$@))"
+helpoutput:
+	node lib/cteepbd.js --help > $(OUTDIR)/ayuda.out
+balances:
+	node lib/cteepbd.js -c "$(EXAMPLESDIR)/cte_test_carriers.csv" -l PENINSULA --json "$(OUTDIR)/balance.json" --xml "$(OUTDIR)/balance.xml" > "$(OUTDIR)/balance.plain"
+
+docs: buildexamples docs/Manual_cteepbd.tex
 ifndef PDFLATEX
 	$(error "Es necesario tener instalado pdflatex para generar la documentación")
 endif
@@ -64,12 +73,3 @@ ${BUILDDIR}:
 
 ${OUTDIR}:
 	mkdir -p ${OUTDIR}
-
-.PHONY: buildexamplesK $(EXAMPLESK)
-buildexamplesK: $(OUTDIR) $(EXAMPLESK)
-.PHONY: buildexamplesJ $(EXAMPLESJ)
-buildexamplesJ: $(OUTDIR) $(EXAMPLESJ)
-$(EXAMPLESK):
-	node lib/cteepbd.js -c "$@" -l PENINSULA > "$(subst .csv,.out,$(subst $(EXAMPLESDIR),$(OUTDIR),$@))"
-$(EXAMPLESJ):
-	node lib/cteepbd.js -c "$@" -l PENINSULA > "$(subst .csv,.out,$(subst $(EXAMPLESDIR),$(OUTDIR),$@))"
