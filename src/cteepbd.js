@@ -434,7 +434,7 @@ if(components && !args.nosimplificafps) {
 // Guardado de factores de paso corregidos ------------------------------------------------------
 if (args.gen_archivo_factores !== '') {
   const fpstring = serialize_wfactors(fpdata);
-  console.log("Factores de paso: ", fpstring);
+  if(verbosity > 0) { console.log("Factores de paso: ", fpstring); }
   fs.writeFile(args.gen_archivo_factores, fpstring, 'utf-8',
     err => {
       if (err) {
