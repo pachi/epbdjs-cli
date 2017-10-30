@@ -331,42 +331,83 @@ if (args.archivo_factores !== '') {
 }
 
 // Área de referencia -------------------------------------------------------------------------
+// Orden de prioridad:
+// - Valor explícito en argumentos de CLI
+// - Valor definido en metadatos de componentes
+// - Valor por defecto (AREA_REF = 1)
 let c_arearef = null;
+let metaarea = null;
 if (components) {
-  const metaarea = components.cmeta.find(c => c.key === 'CTE_AREAREF');
+  metaarea = components.cmeta.find(c => c.key === 'CTE_AREAREF');
   c_arearef = metaarea ? metaarea.value : null;
 }
 
 let arearef;
-if(c_arearef === null) { // No se define CTE_AREAREF en metadatos de vectores energéticos
+if(c_arearef === null) { // No se define CTE_AREAREF en metadatos de componentes energéticos
   if (args.arearef !== null) {
     arearef = args.arearef;
+    console.log(`Área de referencia (usuario) [m2]: ${ arearef }`);
   } else {
     arearef = AREA_REF;
     console.log(`Área de referencia (predefinida) [m2]: ${ arearef }`);
   }
-} else { // Se define CTE_AREAREF en metadatos de vectores energéticos
+} else { // Se define CTE_AREAREF en metadatos de componentes energéticos
   if (args.arearef === null) {
     arearef = c_arearef;
     console.log(`Área de referencia (metadatos) [m2]: ${ arearef }`);
   } else {
     if (c_arearef !== args.arearef) {
-      console.log(`AVISO: El valor del área de referencia del archivo de vectores energéticos (${ c_arearef }) no coincide con el valor definido por el usuario (${ args.arearef })`);
+      console.log(`AVISO: El valor del área de referencia del archivo de componentes energéticos (${ c_arearef }) no coincide con el valor definido por el usuario (${ args.arearef })`);
     }
     arearef = args.arearef;
     console.log(`Área de referencia (usuario) [m2]: ${ arearef }`);
   }
 }
+// Actualiza metadato CTE_AREAREF al valor seleccionado
+if(metaarea) {
+  metaarea.value = arearef;
+} else if(components) {
+  components.cmeta.push({ key: 'CTE_AREAREF', value: arearef });
+}
 
 // kexp ------------------------------------------------------------------------------------------
+// Orden de prioridad:
+// - Valor explícito en argumentos de CLI
+// - Valor definido en metadatos de componentes
+// - Valor por defecto (KEXP_REF = 1)
+let c_kexp = null;
+let metakexp = null;
+if (components) {
+  metakexp = components.cmeta.find(c => c.key === 'CTE_KEXP');
+  c_kexp = metakexp ? metakexp.value : null;
+}
 
 let kexp;
-if (args.kexp === null) {
-  kexp = KEXP_REF;
-  console.log(`Factor de exportación (predefinido): ${ kexp }`);
-} else {
-  kexp = args.kexp;
-  console.log(`Factor de exportación (usuario): ${ kexp }`);
+if(c_kexp === null) { // No se define CTE_KEXP en metadatos de componentes energéticos
+  if(args.kexp !== null) {
+    kexp = args.kexp;
+    console.log(`Factor de exportación (usuario) [-]: ${ kexp }`);
+  } else {
+    kexp = KEXP_REF;
+    console.log(`Factor de exportación (predefinido) [-]: ${ kexp }`);
+  }
+} else { // Se define CTE_KEXP en metadatos de componentes energéticos
+  if (args.kexp === null) {
+    kexp = c_kexp;
+    console.log(`Factor de exportación (metadatos) [-]: ${ kexp }`);
+  } else {
+    if (c_kexp !== args.kexp) {
+      console.log(`AVISO: El valor del factor de exportación del archivo de componentes energéticos (${ c_kexp }) no coincide con el valor definido por el usuario (${ args.kexp })`);
+    }
+    kexp = args.kexp;
+    console.log(`Factor de exportación (usuario) [-]: ${ kexp }`);
+  }
+}
+// Actualiza metadato CTE_AREAREF al valor seleccionado
+if(metakexp) {
+  metakexp.value = kexp;
+} else if(components) {
+  components.cmeta.push({ key: 'CTE_KEXP', value: kexp });
 }
 
 // Guardado de componentes energéticos -----------------------------------------------------------
@@ -385,9 +426,9 @@ if (args.gen_archivo_componentes !== '') {
 
 // Simplificar factores de paso -----------------------------------------------------------------
 if(components && !args.nosimplificafps) {
-  const oldfplen = fpdata.length;
+  const oldfplen = fpdata.wdata.length;
   fpdata = strip_wfactors(fpdata, components);
-  if (verbosity > 1) { console.log(`Reducción de factores de paso: ${ oldfplen } a ${ fpdata.length }`); }
+  if (verbosity > 1) { console.log(`Reducción de factores de paso: ${ oldfplen } a ${ fpdata.wdata.length }`); }
 }
 
 // Guardado de factores de paso corregidos ------------------------------------------------------
