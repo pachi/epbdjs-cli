@@ -38,6 +38,9 @@ import {
 } from 'epbdjs';
 
 const {
+  KEXP_DEFAULT,
+  CTE_COGEN_DEFAULTS,
+  CTE_RED_DEFAULTS,
   parse_components,
   new_wfactors,
   parse_wfactors,
@@ -47,8 +50,7 @@ const {
   balance_to_XML
 } = cte;
 
-const KEXP_REF = 0.0;
-const AREA_REF = 1.0;
+const AREAREF_DEFAULT = 1.0;
 const VERSION = '1.0';
 
 var parser = new ArgumentParser({
@@ -80,7 +82,7 @@ parser.addArgument(
 parser.addArgument(
   '-a',
   {
-    help: 'Área de referencia [Predefinida: 1]',
+    help: `Área de referencia [Predefinida: ${ AREAREF_DEFAULT }]`,
     type: Number,
     dest: 'arearef'
   }
@@ -88,7 +90,7 @@ parser.addArgument(
 parser.addArgument(
   '-k',
   {
-    help: 'Factor de exportación (k_exp) [Predefinido: 0.0]',
+    help: `Factor de exportación (k_exp) [Predefinido: ${ KEXP_DEFAULT }]`,
     type: Number,
     dest: 'kexp'
   }
@@ -124,17 +126,33 @@ parser.addArgument(
 parser.addArgument(
   '--cogen',
   {
-    help: 'Factores de exportación (ren, nren) a la red y a usos no EPB de electricidad cogenerada. P.e.: --cogen 0 2.5 0 2.5',
+    help: 'Factores de exportación a la red (ren, nren) de la electricidad cogenerada. P.e.: --cogen 0 2.5',
     type: Number,
-    nargs: 4
+    nargs: 2
+  }
+);
+// parser.addArgument(
+//   '--cogennepb',
+//   {
+//     help: 'Factores de exportación a usos no EPB (ren, nren) de la electricidad cogenerada. P.e.: --cogennepb 0 2.5',
+//     type: Number,
+//     nargs: 2
+//   }
+// );
+parser.addArgument(
+  '--red1',
+  {
+    help: 'Factores de paso (ren, nren) del vector RED1. P.e.: --red1 0 1.3',
+    type: Number,
+    nargs: 2
   }
 );
 parser.addArgument(
-  '--red',
+  '--red2',
   {
-    help: 'Factores de paso (ren, nren) de los vectores RED1 y RED2. P.e.: --red 0 1.3 0 1.3',
+    help: 'Factores de paso (ren, nren) del vector RED2. P.e.: --red2 0 1.3',
     type: Number,
-    nargs: 4
+    nargs: 2
   }
 );
 parser.addArgument(
@@ -230,6 +248,23 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
   process.exit();
 }
 
+// Funciones auxiliares -----------------------------------------------------------------------
+
+// Actualiza objeto de metadatos con nuevo valor de la clave o inserta clave y valor si no existe
+function updatemeta(metaobj, key, value) {
+  const match = metaobj.find(c => c.key === key)
+  if(match) {
+    match.value = value;
+  } else {
+    metaobj.push({ key, value });
+  }
+}
+
+// --------------------------------------------------------------------------------------------
+
+
+// Prólogo ------------------------------------------------------------------------------------
+
 const verbosity = args.verbosity;
 
 if (verbosity > 2) {
@@ -245,24 +280,24 @@ console.log("** Datos de entrada");
 // Lee kexp
 if (args.kexp !== null) {
   if (args.kexp < 0 || args.kexp > 1) {
-    console.log(`ERROR: el factor de exportación debe estar entre 0.0 y 1.0 y vale ${ args.kexp }`);
+    console.error(`ERROR: el factor de exportación debe estar entre 0.0 y 1.0 y vale ${ args.kexp }`);
     process.exit();
   }
-  if (args.kexp !== 0) {
-    console.log(`AVISO: factor de exportación distinto al reglamentario (${ args.kexp }) (CTE DB-HE: k_exp = 0)`);
+  if (args.kexp !== KEXP_DEFAULT) {
+    console.warn(`AVISO: factor de exportación (${ args.kexp }) distinto al reglamentario (${ KEXP_DEFAULT })`);
     process.exit();
   }
 }
 
 // Factores de paso
 if (args.archivo_factores !== '' && args.fps_loc !== '') {
-  console.log(`ERROR: deben definirse los factores de paso usando un archivo de datos o una localización, pero no ambos`);
+  console.error(`ERROR: deben definirse los factores de paso usando un archivo de datos o una localización, pero no ambos`);
   process.exit();
 }
 
 // Area de referencia
 if (args.arearef !== null && args.arearef <= 0) {
-  console.log(`ERROR: el área de referencia definida por el usuario debe ser mayor que 0 y vale ${ args.arearef }`);
+  console.error(`ERROR: el área de referencia definida por el usuario debe ser mayor que 0 y vale ${ args.arearef }`);
   process.exit();
 }
 
@@ -273,155 +308,143 @@ if (args.archivo_componentes !== '') {
     const componentsstring = fs.readFileSync(args.archivo_componentes, 'utf-8');
     components = parse_components(componentsstring);
   } catch (e) {
-    console.log(`ERROR: No se ha podido leer el archivo de componentes energéticos "${ args.archivo_componentes }"`);
+    console.error(`ERROR: No se ha podido leer el archivo de componentes energéticos "${ args.archivo_componentes }"`);
     throw e;
   } finally {
     console.log(`Componentes energéticos: "${ args.archivo_componentes }"`);
   }
 }
 
+// Extraemos los valores bien conocidos, para preferirlos sobre los valores por defecto
+// Las opciones de línea de comandos tienen prioridad en todo caso
+// Valores bien conocidos:
+// CTE_AREAREF -> num
+// CTE_KEXP -> num
+// CTE_LOCALIZACION -> str
+// CTE_COGEN -> num, num
+// CTE_RED1 -> num, num
+// CTE_RED2 -> num, num
+const COMPONENTS_META = {};
+if (components) {
+  // TODO: esto debería ser más robusto frente a archivos mal formados
+  let meta = components.cmeta.find(c => c.key === 'CTE_AREAREF');
+  COMPONENTS_META.arearef = meta ? meta.value : null;
+  meta = components.cmeta.find(c => c.key === 'CTE_KEXP');
+  COMPONENTS_META.kexp = meta ? meta.value : null;
+  meta = components.cmeta.find(c => c.key === 'CTE_LOCALIZACION');
+  COMPONENTS_META.loc = meta ? meta.value : null;
+  meta = components.cmeta.find(c => c.key === 'CTE_COGEN');
+  COMPONENTS_META.cogen = meta ? meta.value.split(',').map(Number) : null;
+  meta = components.cmeta.find(c => c.key === 'CTE_COGENNEPB');
+  COMPONENTS_META.cogennepb = meta ? meta.value.split(',').map(Number) : null;
+  meta = components.cmeta.find(c => c.key === 'CTE_RED1');
+  COMPONENTS_META.red1 = meta ? meta.value.split(',').map(Number) : null;
+  meta = components.cmeta.find(c => c.key === 'CTE_RED2');
+  COMPONENTS_META.red2 = meta ? meta.value.split(',').map(Number) : null;
+  if(verbosity > 1) {
+    console.log("Metadatos de componentes: ", COMPONENTS_META);
+  }
+}
+
 // Factores de paso ---------------------------------------------------------------------------
+// Para los factores de paso para RED1, RED2, COGEN, se usan los valores por defecto salvo que
+// se indiquen valores por la interfaz
+// Se generan en base a la localización (PENINSULA, CANARIAS, BALEARES, CEUTAMELILLA)
 let fpdata;
-if (args.archivo_factores !== '') {
+if (args.archivo_factores !== '') { // Archivo de factores de paso
   try {
     const fpstring = fs.readFileSync(args.archivo_factores, 'utf-8');
-    fpdata = parse_wfactors(fpstring);
+    fpdata = parse_wfactors(fpstring, { stripnepb: false });
   } catch (e) {
-    console.log(`ERROR: No se ha podido leer el archivo de factores de paso "${ args.archivo_factores }"`);
+    console.error(`ERROR: No se ha podido leer el archivo de factores de paso "${ args.archivo_factores }"`);
   } finally {
-    console.log(`Factores de paso: "${ args.archivo_factores }"`);
+    console.log(`Factores de paso (archivo): "${ args.archivo_factores }"`);
   }
-} else if (args.fps_loc) {
-  console.log(`Factores de paso: ${ args.fps_loc }`);
-  let red = null;
-  let cogen = null;
-  if (args.red !== null) {
-    console.log(`Factores de paso de usuario para RED1, RED2: ${ args.red }`);
-    const [r1_ren, r1_nren, r2_ren, r2_nren] = args.red;
+} else if (args.fps_loc || COMPONENTS_META.loc) { // Definición de localización por CLI o metadatos
+  let localizacion;
+  if(args.fps_loc) {
+    localizacion = args.fps_loc;
+    console.log(`Factores de paso (usuario): ${ localizacion }`);
+  } else {
+    localizacion = COMPONENTS_META.loc;
+    console.log(`Factores de paso (metadatos): ${ localizacion }`);
+  }
+  if(components) {
+    updatemeta(components.cmeta, 'CTE_LOCALIZACION', localizacion);
+  }
+
+  const red = CTE_RED_DEFAULTS;
+  if (args.red1 || COMPONENTS_META.red1) {
+    let r1_ren, r1_nren;
+    if(args.red1) {
+      [r1_ren, r1_nren] = args.red1;
+      console.log(`Factores de paso para RED1 (usuario): ${ r1_ren }, ${ r1_nren }`);
+    } else {
+      [r1_ren, r1_nren] = COMPONENTS_META.red1;
+      console.log(`Factores de paso para RED1 (metadatos): ${ r1_ren }, ${ r1_nren }`);
+    }
     if (verbosity > 0) {
       console.log(`- RED1, RED, input, A, ${ r1_ren }, ${ r1_nren } `);
+    }
+    red.RED1.ren = r1_ren;
+    red.RED1.nren = r1_nren;
+  }
+
+  if (args.red2 || COMPONENTS_META.red2) {
+    let r2_ren, r2_nren;
+    if(args.red2) {
+      [r2_ren, r2_nren] = args.red2;
+      console.log(`Factores de paso para RED2 (usuario): ${ r2_ren }, ${ r2_nren }`);
+    } else {
+      [r2_ren, r2_nren] = COMPONENTS_META.red2;
+      console.log(`Factores de paso para RED2 (metadatos): ${ r2_ren }, ${ r2_nren }`);
+    }
+    if (verbosity > 0) {
       console.log(`- RED2, RED, input, A, ${ r2_ren }, ${ r2_nren } `);
     }
-    red = {
-      RED1: { ren: r1_ren, nren: r1_nren }, // RED1, RED, input, A, ren, nren
-      RED2: { ren: r2_ren, nren: r2_nren }  // RED2, RED, input, A, ren, nren
-    };
+    red.RED2.ren = r2_ren;
+    red.RED2.nren = r2_nren;
   }
-  if (args.cogen !== null) {
-    console.log(`Factores de paso de usuario para COGENERACIÓN: ${ args.cogen }`);
-    const [cgrid_ren, cgrid_nren, cnepb_ren, cnepb_nren] = args.cogen;
-    if (verbosity > 0) {
-      console.log(`- ELECTRICIDAD, COGENERACION, to_grid, A, ${ cgrid_ren }, ${ cgrid_nren } `);
-      console.log(`- ELECTRICIDAD, COGENERACION, to_nEPB, A, ${ cnepb_ren }, ${ cnepb_nren } `);
+
+  const cogen = CTE_COGEN_DEFAULTS;
+  if (args.cogen || COMPONENTS_META.cogen || COMPONENTS_META.cogennepb) {
+    let cgrid_ren, cgrid_nren;
+    if(args.cogen) {
+      [cgrid_ren, cgrid_nren] = args.cogen;
+      console.log(`Factores de paso de COGENERACIÓN a la red (usuario): ${ cgrid_ren }, ${ cgrid_nren }`);
+    } else {
+      if (COMPONENTS_META.cogen) {
+        [cgrid_ren, cgrid_nren] = COMPONENTS_META.cogen;
+        console.log(`Factores de paso de COGENERACIÓN a la red (metadatos): ${ cgrid_ren }, ${ cgrid_nren }`);
+      }
     }
-    cogen = {
-      to_grid: { ren: cgrid_ren, nren: cgrid_nren }, // ELECTRICIDAD, COGENERACION, to_grid, A, ren, nren
-      to_nEPB: { ren: cnepb_ren, nren: cnepb_nren }  // ELECTRICIDAD, COGENERACION, to_nEPB, A, ren, nren
-    };
+    cogen.to_grid.ren = cgrid_ren;
+    cogen.to_grid.nren = cgrid_nren;
+    if (verbosity > 0) {
+      console.log(`- ELECTRICIDAD, COGENERACION, to_grid, A, ${ cogen.to_grid.ren }, ${ cogen.to_grid.nren } `);
+    }
+
+    // No tenemos opción de pasar este factor por CLI, ya que no se usa en CTE2018
+    if (COMPONENTS_META.cogennepb) {
+      const [cnepb_ren, cnepb_nren] = COMPONENTS_META.cogennepb;
+      console.log(`Factores de paso de COGENERACIÓN a usos no EPB (metadatos): ${ cnepb_ren }, ${ cnepb_nren }`);
+      cogen.to_nEPB.ren = cnepb_ren;
+      cogen.to_nEPB.nren = cnepb_nren;
+    }
+    if (verbosity > 0) {
+      console.log(`- ELECTRICIDAD, COGENERACION, to_nEPB, A, ${ cogen.to_nEPB.ren }, ${ cogen.to_nEPB.nren } `);
+    }
   }
+
   try {
-    fpdata = new_wfactors(args.fps_loc, { red, cogen });
+    fpdata = new_wfactors(localizacion, { red, cogen });
   } catch (e) {
-    console.log("ERROR: No se han podido generar los factores de paso");
+    console.error("ERROR: No se han podido generar los factores de paso");
     if(verbosity > 2) { throw(e); } else { process.exit() }
   }
 } else {
-  console.log("[ERROR]: No se han definido factores de paso");
+  console.error("[ERROR]: No se han definido factores de paso");
   process.exit();
-}
-
-// Área de referencia -------------------------------------------------------------------------
-// Orden de prioridad:
-// - Valor explícito en argumentos de CLI
-// - Valor definido en metadatos de componentes
-// - Valor por defecto (AREA_REF = 1)
-let c_arearef = null;
-let metaarea = null;
-if (components) {
-  metaarea = components.cmeta.find(c => c.key === 'CTE_AREAREF');
-  c_arearef = metaarea ? metaarea.value : null;
-}
-
-let arearef;
-if(c_arearef === null) { // No se define CTE_AREAREF en metadatos de componentes energéticos
-  if (args.arearef !== null) {
-    arearef = args.arearef;
-    console.log(`Área de referencia (usuario) [m2]: ${ arearef }`);
-  } else {
-    arearef = AREA_REF;
-    console.log(`Área de referencia (predefinida) [m2]: ${ arearef }`);
-  }
-} else { // Se define CTE_AREAREF en metadatos de componentes energéticos
-  if (args.arearef === null) {
-    arearef = c_arearef;
-    console.log(`Área de referencia (metadatos) [m2]: ${ arearef }`);
-  } else {
-    if (c_arearef !== args.arearef) {
-      console.log(`AVISO: El valor del área de referencia del archivo de componentes energéticos (${ c_arearef }) no coincide con el valor definido por el usuario (${ args.arearef })`);
-    }
-    arearef = args.arearef;
-    console.log(`Área de referencia (usuario) [m2]: ${ arearef }`);
-  }
-}
-// Actualiza metadato CTE_AREAREF al valor seleccionado
-if(metaarea) {
-  metaarea.value = arearef;
-} else if(components) {
-  components.cmeta.push({ key: 'CTE_AREAREF', value: arearef });
-}
-
-// kexp ------------------------------------------------------------------------------------------
-// Orden de prioridad:
-// - Valor explícito en argumentos de CLI
-// - Valor definido en metadatos de componentes
-// - Valor por defecto (KEXP_REF = 1)
-let c_kexp = null;
-let metakexp = null;
-if (components) {
-  metakexp = components.cmeta.find(c => c.key === 'CTE_KEXP');
-  c_kexp = metakexp ? metakexp.value : null;
-}
-
-let kexp;
-if(c_kexp === null) { // No se define CTE_KEXP en metadatos de componentes energéticos
-  if(args.kexp !== null) {
-    kexp = args.kexp;
-    console.log(`Factor de exportación (usuario) [-]: ${ kexp }`);
-  } else {
-    kexp = KEXP_REF;
-    console.log(`Factor de exportación (predefinido) [-]: ${ kexp }`);
-  }
-} else { // Se define CTE_KEXP en metadatos de componentes energéticos
-  if (args.kexp === null) {
-    kexp = c_kexp;
-    console.log(`Factor de exportación (metadatos) [-]: ${ kexp }`);
-  } else {
-    if (c_kexp !== args.kexp) {
-      console.log(`AVISO: El valor del factor de exportación del archivo de componentes energéticos (${ c_kexp }) no coincide con el valor definido por el usuario (${ args.kexp })`);
-    }
-    kexp = args.kexp;
-    console.log(`Factor de exportación (usuario) [-]: ${ kexp }`);
-  }
-}
-// Actualiza metadato CTE_AREAREF al valor seleccionado
-if(metakexp) {
-  metakexp.value = kexp;
-} else if(components) {
-  components.cmeta.push({ key: 'CTE_KEXP', value: kexp });
-}
-
-// Guardado de componentes energéticos -----------------------------------------------------------
-if (args.gen_archivo_componentes !== '') {
-  const carrierstring = serialize_components(components);
-  fs.writeFile(args.gen_archivo_componentes, carrierstring, 'utf-8',
-    err => {
-      if (err) {
-        console.log(`ERROR: No se ha podido escribir en "${ args.gen_archivo_componentes}" debido al error: ${ err }`);
-      } else {
-        if (verbosity > 0) { console.log(`Guardado archivo de vectores energéticos: ${ args.gen_archivo_componentes }`); }
-      }
-    }
-  );
 }
 
 // Simplificar factores de paso -----------------------------------------------------------------
@@ -431,6 +454,83 @@ if(components && !args.nosimplificafps) {
   if (verbosity > 1) { console.log(`Reducción de factores de paso: ${ oldfplen } a ${ fpdata.wdata.length }`); }
 }
 
+// Área de referencia -------------------------------------------------------------------------
+// Orden de prioridad:
+// - Valor explícito en argumentos de CLI
+// - Valor definido en metadatos de componentes
+// - Valor por defecto (AREA_REF = 1)
+
+let arearef;
+if(COMPONENTS_META.arearef === null) { // No se define CTE_AREAREF en metadatos de componentes energéticos
+  if (args.arearef !== null) {
+    arearef = args.arearef;
+    console.log(`Área de referencia (usuario) [m2]: ${ arearef }`);
+  } else {
+    arearef = AREAREF_DEFAULT;
+    console.log(`Área de referencia (predefinida) [m2]: ${ arearef }`);
+  }
+} else { // Se define CTE_AREAREF en metadatos de componentes energéticos
+  if (args.arearef === null) {
+    arearef = COMPONENTS_META.arearef;
+    console.log(`Área de referencia (metadatos) [m2]: ${ arearef }`);
+  } else {
+    if (COMPONENTS_META.arearef !== args.arearef) {
+      console.warn(`AVISO: El valor del área de referencia del archivo de componentes energéticos (${ COMPONENTS_META.arearef }) no coincide con el valor definido por el usuario (${ args.arearef })`);
+    }
+    arearef = args.arearef;
+    console.log(`Área de referencia (usuario) [m2]: ${ arearef }`);
+  }
+}
+// Actualiza metadato CTE_AREAREF al valor seleccionado
+if (components) {
+  updatemeta(components.cmeta, 'CTE_AREAREF', arearef);
+}
+
+// kexp ------------------------------------------------------------------------------------------
+// Orden de prioridad:
+// - Valor explícito en argumentos de CLI
+// - Valor definido en metadatos de componentes
+// - Valor por defecto (KEXP_REF = 1)
+let kexp;
+if(COMPONENTS_META.kexp === null) { // No se define CTE_KEXP en metadatos de componentes energéticos
+  if(args.kexp !== null) {
+    kexp = args.kexp;
+    console.log(`Factor de exportación (usuario) [-]: ${ kexp }`);
+  } else {
+    kexp = KEXP_DEFAULT;
+    console.log(`Factor de exportación (predefinido) [-]: ${ kexp }`);
+  }
+} else { // Se define CTE_KEXP en metadatos de componentes energéticos
+  if (args.kexp === null) {
+    kexp = COMPONENTS_META.kexp;
+    console.log(`Factor de exportación (metadatos) [-]: ${ kexp }`);
+  } else {
+    if (COMPONENTS_META.kexp !== args.kexp) {
+      console.warn(`AVISO: El valor del factor de exportación del archivo de componentes energéticos (${ COMPONENTS_META.kexp }) no coincide con el valor definido por el usuario (${ args.kexp })`);
+    }
+    kexp = args.kexp;
+    console.log(`Factor de exportación (usuario) [-]: ${ kexp }`);
+  }
+}
+// Actualiza metadato CTE_KEXP al valor seleccionado
+if (components) {
+  updatemeta(components.cmeta, 'CTE_KEXP', kexp);
+}
+
+// Guardado de componentes energéticos -----------------------------------------------------------
+if (args.gen_archivo_componentes !== '') {
+  const carrierstring = serialize_components(components);
+  fs.writeFile(args.gen_archivo_componentes, carrierstring, 'utf-8',
+    err => {
+      if (err) {
+        console.error(`ERROR: No se ha podido escribir en "${ args.gen_archivo_componentes}" debido al error: ${ err }`);
+      } else {
+        if (verbosity > 0) { console.log(`Guardado archivo de vectores energéticos: ${ args.gen_archivo_componentes }`); }
+      }
+    }
+  );
+}
+
 // Guardado de factores de paso corregidos ------------------------------------------------------
 if (args.gen_archivo_factores !== '') {
   const fpstring = serialize_wfactors(fpdata);
@@ -438,7 +538,7 @@ if (args.gen_archivo_factores !== '') {
   fs.writeFile(args.gen_archivo_factores, fpstring, 'utf-8',
     err => {
       if (err) {
-        console.log(`ERROR: No se ha podido escribir en "${ args.gen_archivo_factores}" debido al error: ${ err }`);
+        console.error(`ERROR: No se ha podido escribir en "${ args.gen_archivo_factores}" debido al error: ${ err }`);
       } else {
         if (verbosity > 0) { console.log(`Guardado archivo de factores de paso: ${ args.gen_archivo_factores }`); }
       }
@@ -452,11 +552,13 @@ if (components && fpdata && (kexp !== null)) {
   try {
     balance = energy_performance(components, fpdata, kexp, arearef);
   } catch (e) {
-    console.log(`ERROR: No se ha podido calcular el balance energético`);
+    console.error(`ERROR: No se ha podido calcular el balance energético`);
     throw e;
   }
+} else if(fpdata && args.gen_archivos_factores !== '') {
+  console.log(`No se calcula el balance pero se ha generado el archivo de factores de paso ${ args.gen_archivo_factores }`);
 } else {
-  console.log(`No hay datos suficientes para calcular el balance energético`);
+  console.log(`No se han definido datos suficientes para calcular el balance energético. Necesita definir al menos los componentes energéticos y los factores de paso`);
 }
 
 // Salida de resultados ------------------------------------------------------------------------
@@ -468,7 +570,7 @@ if (balance) {
     fs.writeFile(args.archivo_salida_json, jsonbalancestring, 'utf-8',
       err => {
         if (err) {
-          console.log(`ERROR: No se ha podido escribir en "${args.archivo_salida_json}" debido al error: ${err}`);
+          console.error(`ERROR: No se ha podido escribir en "${args.archivo_salida_json}" debido al error: ${err}`);
         }
       }
     );
@@ -480,7 +582,7 @@ if (balance) {
     fs.writeFile(args.archivo_salida_xml, xmlstring, 'utf-8',
       err => {
         if (err) {
-          console.log(`ERROR: No se ha podido escribir en "${args.archivo_salida_xml}" debido al error: ${err}`);
+          console.error(`ERROR: No se ha podido escribir en "${args.archivo_salida_xml}" debido al error: ${err}`);
         }
       }
     );
