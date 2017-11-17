@@ -260,7 +260,7 @@ Aunque el programa está concebido para calcular la eficiencia energética con f
 
 \subsubsection{Argumentos de definición de los datos de entrada}
 
-Algunos de los argumentos de la interfaz del programa \texttt{cteepbd} sirven para definir los datos de entrada para el cálculo del balance energético.
+Algunos de los argumentos de la interfaz del programa \texttt{cteepbd} sirven para definir los datos de entrada para el cálculo del balance energético. Estos datos tienen preferencia sobre los parámetros definidos en los metadatos del archivo de definición de componentes energéticos.
 
 \textbf{\texttt{-a AREAREF}}
 
@@ -272,7 +272,7 @@ Este argumento indica el factor de exportación $k_exp$ usado para calcular la e
 
 \textbf{\texttt{-c ARCHIVO\_COMPONENTES}}
 
-Este argumento indica la ruta del archivo que define los componentes energéticos sobre los que se realiza el cálculo de la eficiencia energética. Tiene el formato definido en el apartado \nameref{sec:formatocomponentes}.
+Este argumento indica la ruta del archivo que define los componentes energéticos sobre los que se realiza el cálculo de la eficiencia energética. Tiene el formato definido en el apartado \nameref{sec:formatocomponentes} e incluye metadatos que pueden definir también algunos parámetros de cálculo, aunque con menor prioridad que las opciones definidas explícitamente a través de la interfaz del programa.
 
 \textbf{\texttt{-f ARCHIVO\_FACTORES}}
 
@@ -283,17 +283,23 @@ Alternativamente, estos factores de paso pueden definirse mediante una localizac
 
 Este argumento indica los factores de paso para el cálculo de la eficiencia energética a partir de una localización. Puede tomar los valores \texttt{PENINSULA}, \texttt{CANARIAS}, \texttt{BALEARES} o \texttt{CEUTAYMELILLA} para generar los factores de paso reglamentarios correspondientes a dichas zonas \footnote{El \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016 contiene los valores aplicables en cada uno de los casos.}.
 
-\textbf{\texttt{-{}-cogen COGEN COGEN COGEN COGEN}}
+\textbf{\texttt{-{}-cogengrid COGENGRID COGENGRID}}
 
-Este argumento indica los 4 factores de exportación a la red (fracción renovable y fracción no renovable) y a usos no EPB\footnote{El CTE DB-HE no contempla actualmente en la evaluación de la eficiencia energética del edificio el impacto de los usos no EPB ni, de forma más general, y por el uso de un factor de exportación igual a 0, de la energía exportada.} (parte renovable y parte no renovable) de la electricidad cogenerada. Estos factores no se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario.
+Este argumento indica los 2 factores de exportación a la red (parte renovable y parte no renovable) de la electricidad cogenerada. Estos factores no se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario.
 
-El ejemplo \texttt{-{}-cogen 0 2.5 0 2.5} indica que el factor de paso de exportación a la red es de 0 para la parte renovable y de 2.5 para la no renovable, y que el factor de paso de exportación a usos no EPB también es de 0 y 2,5 para las partes renovable y no renovable, respectivamente.
+El ejemplo \texttt{-{}-cogengrid 0 2.5} indica que el factor de paso de exportación a la red es de 0 para la parte renovable y de 2.5 para la no renovable.
 
-\textbf{\texttt{-{}-red RED RED RED RED}}
+\textbf{\texttt{-{}-red1 RED1 RED1}}
 
-Este argumento indica los 4 factores de paso de los vectores energéticos \texttt{RED1} (paso a energía renovable y paso a energía renovable) y \texttt{RED2} (paso a energía renovable y paso a energía renovable). Estos vectores resultan útiles para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red.
+Este argumento indica los 2 factores de paso del vectores energético \texttt{RED1} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red.
 
-El ejemplo \texttt{-{}-red 0 1.3 0 1.3} indica que los factores de paso renovable y no renovable de los vectores \texttt{RED1} y \texttt{RED2} son 0 (parte renovable) y 1.3 (parte no renovable).
+El ejemplo \texttt{-{}-red1 0 1.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED1} son 0 (parte renovable) y 1.3 (parte no renovable).
+
+\textbf{\texttt{-{}-red2 RED2 RED2}}
+
+Este argumento indica los 2 factores de paso del vectores energético \texttt{RED2} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red.
+
+El ejemplo \texttt{-{}-red1 0 1.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED2} son 0 (parte renovable) y 1.3 (parte no renovable).
 
 \subsubsection{Argumentos de definición de valores intermedios}
 
@@ -347,15 +353,20 @@ Su formato es: el texto \texttt{\#META}, seguido de uno o más espacios, el text
 
 En el ejemplo, la siguiente línea define un metadato con clave \texttt{CTE\_AREAREF} y valor \texttt{200.0}:
 
-\lstinputlisting[firstline=6, lastline=6,numbers=none]{ejemplos/cte_test_carriers.csv}
+\lstinputlisting[firstline=5, lastline=5,numbers=none]{ejemplos/cte_test_carriers.csv}
 
-Para los componentes energéticos se definen los siguientes valores conocidos de metadatos:
+Para el archivo de definición de los componentes energéticos se establecen las siguientes claves conocidas de metadatos y los valores que pueden adoptar (todos los valores numéricos usan de separador decimal el punto):
 
 \begin{itemize}
-\item \texttt{CTE\_AREAREF}: área de referencia (superficie útil);
-\item \texttt{CTE\_KEXP}; factor de exportación;
-\item \texttt{CTE\_LOCALIZACION}: localización que define los factores de paso reglamentarios (\texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES}, \texttt{PENINSULA}).
+\item \texttt{CTE\_AREAREF}: valor numérico que indica el área de referencia (superficie útil);
+\item \texttt{CTE\_KEXP}; valor numérico que indica el factor de exportación;
+\item \texttt{CTE\_LOCALIZACION}: cadena de texto que indica la localización que define los factores de paso reglamentarios y puede adoptar los valores: \texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES} o \texttt{PENINSULA};
+\item \texttt{CTE\_COGEN}: dos valores numéricos separados por una coma, que indican los factores de paso (energía primaria) para exportación a la red de electricidad cogenerada, y se refieren a la parte renovable y a la parte no renovable;
+\item \texttt{CTE\_RED1}: dos valores numéricos separados por una coma, que definen los factores de paso (energía primaria) de la red de distrito 1 (vector energético \texttt{RED1}), y se refieren a la parte renovable y a la parte no renovable;
+\item \texttt{CTE\_RED2}: dos valores numéricos separados por una coma, que definen los factores de paso (energía primaria) de la red de distrito 2 (vector energético \texttt{RED2}), y se refieren a la parte renovable y a la parte no renovable;
 \end{itemize}
+
+Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los anteriores metadatos tienen preferencia sobre los valores por defecto, pero tienen menor precedencia que los definidos a través de las opciones del programa. Es decir, para el área de referencia se prefiere, en primer lugar, el valor dado a través de la opción \texttt{-{}-a}, en segundo lugar, al valor definido para el metadato de clave \texttt{CTE\_AREAREF} y, en tercer lugar, al valor por defecto de 1,0.
 
 \subsubsection{Componentes energéticos}\label{sec:componentesenergeticos}
 
@@ -507,24 +518,26 @@ A continuación se muestra el archivo que correspondería a la definición de lo
 
 \lstinputlisting{ejemplos/output/factorespen.csv}
 
-
-Para los factores de paso se definen los siguientes valores conocidos de metadatos:
-
-\begin{itemize}
-\item \texttt{CTE\_FUENTE}: origen de los datos de factores de paso (\texttt{CTE2013});
-\item \texttt{CTE\_FUENTE\_COMENTARIO}; información original sobre la fuente de datos;
-\item \texttt{CTE\_LOCALIZACION}: localización que define los factores de paso reglamentarios (\texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES}, \texttt{PENINSULA}).
-\end{itemize}
-
 \subsubsection{Metadatos}
 
 Las líneas de metadatos asocian un valor a una clave y permiten asociar datos al conjunto de componentes energéticos (p.e el área de referencia del edificio).
 
 Su formato es: el texto \texttt{\#META}, seguido de uno o más espacios, el texto que define la clave (sin espacios intermedios), un separador de dos puntos (\texttt{:}), y el valor asociado (que puede contener cualquier carácter alfanumérico).
 
-En el ejemplo, la siguiente línea define un metadato con clave \texttt{CTE\_LOC} y valor \texttt{PENINSULA}:
+En el ejemplo, la siguiente línea define un metadato con clave \texttt{CTE\_LOCALIZACION} y valor \texttt{PENINSULA}:
 
-\lstinputlisting[firstline=1, lastline=1,numbers=none]{ejemplos/output/factorespen.csv}
+\lstinputlisting[firstline=3, lastline=3,numbers=none]{ejemplos/output/factorespen.csv}
+
+Para el archivo de definición de factores de paso se establecen las siguientes claves conocidas de metadatos y los valores que pueden adoptar (todos los valores numéricos usan de separador decimal el punto):
+
+\begin{itemize}
+\item \texttt{CTE\_FUENTE}: cadena de texto que define el origen de los datos de factores de paso (actualmente puede tomar el valor \texttt{CTE2013});
+\item \texttt{CTE\_FUENTE\_COMENTARIO}; cadena de texto que incluye información adicional sobre la fuente de datos;
+\item \texttt{CTE\_LOCALIZACION}: cadena de texto que indica la localización que define los factores de paso reglamentarios y puede adoptar los valores: \texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES} o \texttt{PENINSULA};
+\item \texttt{CTE\_COGEN}: dos valores numéricos separados por una coma, que recogen los factores de paso usados (energía primaria) para exportación a la red de electricidad cogenerada, y se refieren a la parte renovable y a la parte no renovable;
+\item \texttt{CTE\_RED1}: dos valores numéricos separados por una coma, que recogen los factores de paso usados (energía primaria) de la red de distrito 1 (vector energético \texttt{RED1}), y se refieren a la parte renovable y a la parte no renovable;
+\item \texttt{CTE\_RED2}: dos valores numéricos separados por una coma, que definen los factores de paso usados (energía primaria) de la red de distrito 2 (vector energético \texttt{RED2}), y se refieren a la parte renovable y a la parte no renovable;
+\end{itemize}
 
 \subsubsection{Factores de paso}
 
