@@ -7,6 +7,7 @@ OUTSCRIPT=cteepbd.js
 TESTFP:=src/examples/factores_paso_20140203.csv
 TESTCARRIERS:=src/examples/cte_test_carriers.csv
 EXAMPLESDIR:=docs/ejemplos
+EXAMPLESFP:=$(EXAMPLESDIR)/factores_paso_20140203.csv
 EXAMPLESK:=$(foreach dir,$(EXAMPLESDIR),$(wildcard $(dir)/ejemplo[123456]*.csv))
 EXAMPLESJ:=$(foreach dir,$(EXAMPLESDIR),$(wildcard $(dir)/ejemploJ[123456789]*.csv))
 OUTDIR:=docs/ejemplos/output
@@ -18,7 +19,8 @@ test:
 	npm run bundledev
 	node ${BUILDDIR}/${OUTSCRIPT} --help
 	node ${BUILDDIR}/${OUTSCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
-	node lib/cteepbd.js -c src/examples/cte_test_carriers.csv -l PENINSULA --cogen 0 2.5 0 2.5 -vv
+	node lib/cteepbd.js -vv -c ${TESTCARRIERS} -l PENINSULA --cogen 0 2.5 --red1 0 1.3 --red2 0 1.3
+	node lib/cteepbd.js -vv -c ${TESTCARRIERS}
 
 installpackages:
 	$(info [INFO]: instalación de paquetes)
@@ -36,7 +38,7 @@ endif
 .PHONY: buildexamples $(EXAMPLESJ)
 buildexamples: $(OUTDIR) $(EXAMPLESJ) helpoutput balances factorespaso
 $(EXAMPLESJ):
-	node lib/cteepbd.js -c "$@" -l PENINSULA > "$(subst .csv,.out,$(subst $(EXAMPLESDIR),$(OUTDIR),$@))"
+	node lib/cteepbd.js -c "$@" -f $(EXAMPLESFP) > "$(subst .csv,.out,$(subst $(EXAMPLESDIR),$(OUTDIR),$@))"
 helpoutput:
 	node lib/cteepbd.js --help > $(OUTDIR)/ayuda.out
 balances:
