@@ -283,6 +283,10 @@ Alternativamente, estos factores de paso pueden definirse mediante una localizac
 
 Este argumento indica los factores de paso para el cálculo de la eficiencia energética a partir de una localización. Puede tomar los valores \texttt{PENINSULA}, \texttt{CANARIAS}, \texttt{BALEARES} o \texttt{CEUTAYMELILLA} para generar los factores de paso reglamentarios correspondientes a dichas zonas \footnote{El \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016 contiene los valores aplicables en cada uno de los casos.}.
 
+\textbf{\texttt{-{}-acs\_nearby}}
+
+Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}). Este cálculo está orientado a la obtención de la fracción de energía renovable para uso de ACS para el perímetro próximo (\textit{RER}).
+
 \textbf{\texttt{-{}-cogengrid COGENGRID COGENGRID}}
 
 Este argumento indica los 2 factores de exportación a la red (parte renovable y parte no renovable) de la electricidad cogenerada. Estos factores no se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario.
@@ -722,7 +726,7 @@ Este ejemplo J8 varía respecto al anterior en que los 158 kWh que consume el si
 
 \lstinputlisting[language=, title={\textcolor{gray}{\footnotesize Resultados: ejemploJ8\_cogenbiogasboiler.out}}]{ejemplos/output/ejemploJ8_cogenbiogasboiler.out}
 
-\subsection{Ejemplo J9: Ejemplo con intervalo mensual}
+\subsection{Ejemplo J9: Cálculo con intervalo mensual}
 Este ejemplo J9 muestra un caso completamente eléctrico y con usos no EPB pero detallado con intervalo de cálculo mensual.
 
 \lstinputlisting[title={\textcolor{gray}{\footnotesize Componentes energéticos: ejemplos/ejemplos/ejemploJ9\_electr.csv}}]{ejemplos/ejemploJ9_electr.csv}

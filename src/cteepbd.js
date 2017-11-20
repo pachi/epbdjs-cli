@@ -45,6 +45,8 @@ const {
   new_wfactors,
   parse_wfactors,
   strip_wfactors,
+  components_by_service,
+  wfactors_to_nearby,
   balance_to_plain,
   balance_to_JSON,
   balance_to_XML
@@ -121,6 +123,17 @@ parser.addArgument(
     dest: 'fps_loc',
     choices: ['PENINSULA', 'CANARIAS', 'BALEARES', 'CEUTAYMELILLA'],
     defaultValue: ''
+  }
+);
+parser.addArgument(
+  '--acs_nearby',
+  {
+    help: 'Realiza el balance considerando solo los componentes del servicio de ACS y el perímetro nearby',
+    type: Boolean,
+    dest: 'acsnrb',
+    action: 'storeConst',
+    constant: true,
+    defaultValue: false
   }
 );
 parser.addArgument(
@@ -315,6 +328,10 @@ if (args.archivo_componentes !== '') {
   }
 }
 
+if (args.acsnrb === true) { // Estamos en cálculo de ACS en nearby
+  components = components_by_service(components, 'ACS');
+}
+
 // Extraemos los valores bien conocidos, para preferirlos sobre los valores por defecto
 // Las opciones de línea de comandos tienen prioridad en todo caso
 // Valores bien conocidos:
@@ -454,6 +471,11 @@ if(components && !args.nosimplificafps) {
   if (verbosity > 1) { console.log(`Reducción de factores de paso: ${ oldfplen } a ${ fpdata.wdata.length }`); }
 }
 
+// Factores de paso en nearby
+if (args.acsnrb === true) { // Estamos en cálculo de ACS en nearby
+  fpdata = wfactors_to_nearby(fpdata);
+}
+
 // Área de referencia -------------------------------------------------------------------------
 // Orden de prioridad:
 // - Valor explícito en argumentos de CLI
@@ -588,6 +610,10 @@ if (balance) {
     );
   }
   // Mostrar siempre en formato plain
+  if (args.acsnrb) {
+    console.log("** Balance energético (servicio de ACS, perímetro próximo)");
+  } else {
   console.log("** Balance energético");
+  }
   console.log(balance_to_plain(balance));
 }

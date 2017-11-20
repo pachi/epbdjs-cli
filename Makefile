@@ -21,6 +21,7 @@ test:
 	node ${BUILDDIR}/${OUTSCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
 	node lib/cteepbd.js -vv -c ${TESTCARRIERS} -l PENINSULA --cogen 0 2.5 --red1 0 1.3 --red2 0 1.3
 	node lib/cteepbd.js -vv -c ${TESTCARRIERS}
+	node lib/cteepbd.js -c ${TESTCARRIERS} --acs_nearby
 
 installpackages:
 	$(info [INFO]: instalación de paquetes)
