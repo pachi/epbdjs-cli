@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "argparse": "^1.0.9",
-    "epbdjs": "7.2.0"
+    "epbdjs": "7.3.0"
   },
   "babel": {
     "presets": [
