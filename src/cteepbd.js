@@ -41,6 +41,7 @@ const {
   KEXP_DEFAULT,
   CTE_COGEN_DEFAULTS,
   CTE_RED_DEFAULTS,
+  CTE_LOCS,
   parse_components,
   new_wfactors,
   parse_wfactors,
@@ -343,13 +344,13 @@ if (args.acsnrb === true) { // Estamos en cálculo de ACS en nearby
 // CTE_RED2 -> num, num
 const COMPONENTS_META = {};
 if (components) {
-  // TODO: esto debería ser más robusto frente a archivos mal formados
   let meta = components.cmeta.find(c => c.key === 'CTE_AREAREF');
-  COMPONENTS_META.arearef = meta ? meta.value : null;
+  COMPONENTS_META.arearef = (meta && !isNaN(meta.value)) ? meta.value : null;
   meta = components.cmeta.find(c => c.key === 'CTE_KEXP');
-  COMPONENTS_META.kexp = meta ? meta.value : null;
+  COMPONENTS_META.kexp = (meta && !isNaN(meta.value)) ? meta.value : null;
   meta = components.cmeta.find(c => c.key === 'CTE_LOCALIZACION');
-  COMPONENTS_META.loc = meta ? meta.value : null;
+  COMPONENTS_META.loc = (meta && CTE_LOCS.includes(meta.value)) ? meta.value : null;
+  // TODO: esto debería ser más robusto frente a archivos mal formados
   meta = components.cmeta.find(c => c.key === 'CTE_COGEN');
   COMPONENTS_META.cogen = meta ? meta.value.split(',').map(Number) : null;
   meta = components.cmeta.find(c => c.key === 'CTE_COGENNEPB');
