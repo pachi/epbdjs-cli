@@ -19,13 +19,16 @@
     "type": "git",
     "url": "git+https://github.com/pachi/epbdjs-cli.git"
   },
+  "bugs": {
+    "url": "https://github.com/pachi/epbdjs-cli/issues"
+  },
+  "homepage": "https://github.com/pachi/epbdjs-cli#README.md",
   "keywords": [
     "energy",
     "buildings",
     "NZEB",
     "EPBD",
     "52000-1",
-    "energy",
     "performance",
     "CTE",
     "DB-HE"
@@ -35,7 +38,6 @@
   "bugs": {
     "url": "https://github.com/pachi/epbdjs-cli/issues"
   },
-  "homepage": "https://github.com/pachi/epbdjs-cli#readme",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "^7.2.3",
