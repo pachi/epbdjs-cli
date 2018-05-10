@@ -299,7 +299,6 @@ if (args.kexp !== null) {
   }
   if (args.kexp !== KEXP_DEFAULT) {
     console.warn(`AVISO: factor de exportación (${ args.kexp }) distinto al reglamentario (${ KEXP_DEFAULT })`);
-    process.exit();
   }
 }
 
