@@ -122,7 +122,7 @@ parser.addArgument(
     help: 'Localización que define los factores de paso',
     type: String,
     dest: 'fps_loc',
-    choices: ['PENINSULA', 'CANARIAS', 'BALEARES', 'CEUTAYMELILLA'],
+    choices: ['PENINSULA', 'CANARIAS', 'BALEARES', 'CEUTAMELILLA'],
     defaultValue: ''
   }
 );
